@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabulator/5.5.1/css/tabulator.min.css" />
+    <script src="https://unpkg.com/tabulator-tables@5.3.4/dist/js/tabulator.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.0.0/jquery.min.js"></script>
+    <script type="text/javascript" src="./printThis.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.14/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+
+<body>
+    <div class="wrapper">
+        <div id="container" style="width: 1200px;">
+            <div class="header-labels">
+                <div class="logo">
+                    <img src="./CTA-logo.png" alt="">
+                </div>
+                <div class="report-name">
+                    <h3>BÁO CÁO THỐNG KÊ</3>
+                </div>
+                <div class="report-number">
+                    <div class="report-number-detail">
+                        <p>Mã số:</p>
+                    </div>
+                    <div class="report-number-detail">
+                        <p>Lần NH/L sửa:</p>
+                    </div>
+                    <div class="report-number-detail">
+                        <p>Soạn:</p>
+                    </div>
+                    <div class="report-number-detail">
+                        <p>Áp dụng:</p>
+                    </div>
+                </div>
+            </div>
+            <div id="pageprint" style="width: 100%;">
+                <div id="example-table">
+                    <p>aaaaaaaaa</p>
+                </div>
+            </div>
+            <div class="footer">
+                <p>Người lập</p>
+                <p>Người phê duyệt</p>
+            </div>
+        </div>
+    </div>
+    <div class="download-button">
+        <button id="download-reporting-file" onclick="print1()">Download</button>
+    </div>
+</body>
+<script>
+    // Your JSON data
+    let jsonData1 = {
+        "CTA_Paint": [
+            {
+                "PURCHASE_ORDER_CODE": "YCKD08/23-00067",
+                "CUSTOMER_ID": "CTA",
+                "LOT_NUMBER": "230816M8C2",
+                "PO_DETAILS_PROD_CODE": "ALK-VC5504-6-TRAXF",
+                "COLOR_ID": "TRAXF",
+                "UNIT_ID": "Thanh",
+                "PALLET_ID": "302",
+                "QUANTITY_INCOME": 28,
+                "ACTUAL_WEIGHT": 0.73,
+                "STARTED_DATE_ACTUAL": "30/08/2023",
+                "FINISHED_DATE_ACTUAL": "30/08/2023"
+            },
+            {
+                "PURCHASE_ORDER_CODE": "YCKD08/23-00152",
+                "CUSTOMER_ID": "CTA",
+                "LOT_NUMBER": "230828M7A4",
+                "PO_DETAILS_PROD_CODE": "ALK-XFV5601A-6-TRAXF",
+                "COLOR_ID": "TRAXF",
+                "UNIT_ID": "Thanh",
+                "PALLET_ID": "1035",
+                "QUANTITY_INCOME": 65,
+                "ACTUAL_WEIGHT": 0.89,
+                "STARTED_DATE_ACTUAL": "30/08/2023",
+                "FINISHED_DATE_ACTUAL": "30/08/2023"
+            },
+            {
+                "PURCHASE_ORDER_CODE": "YCKD08/23-00152",
+                "CUSTOMER_ID": "CTA",
+                "LOT_NUMBER": "230828M7C1",
+                "PO_DETAILS_PROD_CODE": "CTX-3202B-6-TRAXF",
+                "COLOR_ID": "TRAXF",
+                "UNIT_ID": "Thanh",
+                "PALLET_ID": "534",
+                "QUANTITY_INCOME": 76,
+                "ACTUAL_WEIGHT": 1.04,
+                "STARTED_DATE_ACTUAL": "30/08/2023",
+                "FINISHED_DATE_ACTUAL": "30/08/2023"
+            },
+            {
+                "PURCHASE_ORDER_CODE": "YCKD08/23-00152",
+                "CUSTOMER_ID": "CTA",
+                "LOT_NUMBER": "230828M7A3",
+                "PO_DETAILS_PROD_CODE": "CTX-3303A-6-TRAXF",
+                "COLOR_ID": "TRAXF",
+                "UNIT_ID": "Thanh",
+                "PALLET_ID": "502",
+                "QUANTITY_INCOME": 46,
+                "ACTUAL_WEIGHT": 1.11,
+                "STARTED_DATE_ACTUAL": "30/08/2023",
+                "FINISHED_DATE_ACTUAL": "30/08/2023"
+            },
+            {
+                "PURCHASE_ORDER_CODE": "YCKD08/23-00152",
+                "CUSTOMER_ID": "CTA",
+                "LOT_NUMBER": "230828M7A3",
+                "PO_DETAILS_PROD_CODE": "CTX-3303A-6-TRAXF",
+                "COLOR_ID": "TRAXF",
+                "UNIT_ID": "Thanh",
+                "PALLET_ID": "1035",
+                "QUANTITY_INCOME": 29,
+                "ACTUAL_WEIGHT": 1.11,
+                "STARTED_DATE_ACTUAL": "30/08/2023",
+                "FINISHED_DATE_ACTUAL": "30/08/2023"
+            },
+            {
+                "PURCHASE_ORDER_CODE": "YCKD08/23-00152",
+                "CUSTOMER_ID": "CTA",
+                "LOT_NUMBER": "230828M7A2",
+                "PO_DETAILS_PROD_CODE": "CTX-3303A-6-TRAXF",
+                "COLOR_ID": "TRAXF",
+                "UNIT_ID": "Thanh",
+                "PALLET_ID": "502",
+                "QUANTITY_INCOME": 38,
+                "ACTUAL_WEIGHT": 1.12,
+                "STARTED_DATE_ACTUAL": "30/08/2023",
+                "FINISHED_DATE_ACTUAL": "30/08/2023"
+            },
+            {
+                "PURCHASE_ORDER_CODE": "YCKD08/23-00152",
+                "CUSTOMER_ID": "CTA",
+                "LOT_NUMBER": "230828M7C2",
+                "PO_DETAILS_PROD_CODE": "CTX-3332A-6-TRAXF",
+                "COLOR_ID": "TRAXF",
+                "UNIT_ID": "Thanh",
+                "PALLET_ID": "534",
+                "QUANTITY_INCOME": 34,
+                "ACTUAL_WEIGHT": 1.08,
+                "STARTED_DATE_ACTUAL": "30/08/2023",
+                "FINISHED_DATE_ACTUAL": "30/08/2023"
+            },
+            {
+                "PURCHASE_ORDER_CODE": "YCKD08/23-00152",
+                "CUSTOMER_ID": "CTA",
+                "LOT_NUMBER": "230828M1C6",
+                "PO_DETAILS_PROD_CODE": "CTX-3300-6-TRAXF",
+                "COLOR_ID": "TRAXF",
+                "UNIT_ID": "Thanh",
+                "PALLET_ID": "1296",
+                "QUANTITY_INCOME": 162,
+                "ACTUAL_WEIGHT": 0.35,
+                "STARTED_DATE_ACTUAL": "30/08/2023",
+                "FINISHED_DATE_ACTUAL": "30/08/2023"
+            },
+            {
+                "PURCHASE_ORDER_CODE": "YCKD08/23-00115 - WHS-244/ K4LD-Kiểm tra kỹ các lỗi không bị bavia, biến dạng đầu cắ",
+                "CUSTOMER_ID": "WHS",
+                "LOT_NUMBER": "230824M1C5",
+                "PO_DETAILS_PROD_CODE": "WHS-K4LD09-6-TSU01",
+                "COLOR_ID": "TSU01",
+                "UNIT_ID": "Thanh",
+                "PALLET_ID": "1192",
+                "QUANTITY_INCOME": 86,
+                "ACTUAL_WEIGHT": 0.211,
+                "STARTED_DATE_ACTUAL": "31/08/2023",
+                "FINISHED_DATE_ACTUAL": "31/08/2023"
+            },
+            {
+                "PURCHASE_ORDER_CODE": "YCKD08/23-00115 - WHS-244/ K4LD-Kiểm tra kỹ các lỗi không bị bavia, biến dạng đầu cắ",
+                "CUSTOMER_ID": "WHS",
+                "LOT_NUMBER": "230825M1A6",
+                "PO_DETAILS_PROD_CODE": "WHS-K4LD06-6-TSU01",
+                "COLOR_ID": "TSU01",
+                "UNIT_ID": "Thanh",
+                "PALLET_ID": "0083",
+                "QUANTITY_INCOME": 604,
+                "ACTUAL_WEIGHT": 0.125,
+                "STARTED_DATE_ACTUAL": "31/08/2023",
+                "FINISHED_DATE_ACTUAL": "31/08/2023"
+            },
+            {
+                "PURCHASE_ORDER_CODE": "YCKD08/23-00131 - WHS-248.1/Hàng không hoá già",
+                "CUSTOMER_ID": "WHS",
+                "LOT_NUMBER": "230828M4C4",
+                "PO_DETAILS_PROD_CODE": "WHS-T50-3-TSU01",
+                "COLOR_ID": "TSU01",
+                "UNIT_ID": "Thanh",
+                "PALLET_ID": "460",
+                "QUANTITY_INCOME": 885,
+                "ACTUAL_WEIGHT": 0.112,
+                "STARTED_DATE_ACTUAL": "31/08/2023",
+                "FINISHED_DATE_ACTUAL": "31/08/2023"
+            },
+            {
+                "PURCHASE_ORDER_CODE": "YCKD08/23-00131 - WHS-248.1/Hàng không hoá già",
+                "CUSTOMER_ID": "WHS",
+                "LOT_NUMBER": "230830M4A7",
+                "PO_DETAILS_PROD_CODE": "WHS-T30-3-TSU01",
+                "COLOR_ID": "TSU01",
+                "UNIT_ID": "Thanh",
+                "PALLET_ID": "460",
+                "QUANTITY_INCOME": 1321,
+                "ACTUAL_WEIGHT": 0.068,
+                "STARTED_DATE_ACTUAL": "31/08/2023",
+                "FINISHED_DATE_ACTUAL": "31/08/2023"
+            },
+            {
+                "PURCHASE_ORDER_CODE": "YCKD08/23-00131 - WHS-248.1/Hàng không hoá già",
+                "CUSTOMER_ID": "WHS",
+                "LOT_NUMBER": "230826M3C1",
+                "PO_DETAILS_PROD_CODE": "WHS-F80-3-TSU01",
+                "COLOR_ID": "TSU01",
+                "UNIT_ID": "Thanh",
+                "PALLET_ID": "423",
+                "QUANTITY_INCOME": 12,
+                "ACTUAL_WEIGHT": 0.238,
+                "STARTED_DATE_ACTUAL": "31/08/2023",
+                "FINISHED_DATE_ACTUAL": "31/08/2023"
+            },
+            {
+                "PURCHASE_ORDER_CODE": "YCKD08/23-00132 - WHS-248A/ Hoá già",
+                "CUSTOMER_ID": "WHS",
+                "LOT_NUMBER": "230830M4A5",
+                "PO_DETAILS_PROD_CODE": "WHS-F80-3-TSU01",
+                "COLOR_ID": "TSU01",
+                "UNIT_ID": "Thanh",
+                "PALLET_ID": "2070",
+                "QUANTITY_INCOME": 287,
+                "ACTUAL_WEIGHT": 0.243,
+                "STARTED_DATE_ACTUAL": "31/08/2023",
+                "FINISHED_DATE_ACTUAL": "31/08/2023"
+            },
+            {
+                "PURCHASE_ORDER_CODE": "YCKD08/23-00131 - WHS-248.1/Hàng không hoá già",
+                "CUSTOMER_ID": "WHS",
+                "LOT_NUMBER": "230830M4A6",
+                "PO_DETAILS_PROD_CODE": "WHS-F80-3-TSU01",
+                "COLOR_ID": "TSU01",
+                "UNIT_ID": "Thanh",
+                "PALLET_ID": "460",
+                "QUANTITY_INCOME": 274,
+                "ACTUAL_WEIGHT": 0.243,
+                "STARTED_DATE_ACTUAL": "31/08/2023",
+                "FINISHED_DATE_ACTUAL": "31/08/2023"
+            },
+            {
+                "PURCHASE_ORDER_CODE": "YCKD08/23-00133 - WHS-248.1/Hàng hoá già",
+                "CUSTOMER_ID": "WHS",
+                "LOT_NUMBER": "230829M3A1",
+                "PO_DETAILS_PROD_CODE": "WHS-F120-3-TSU01",
+                "COLOR_ID": "TSU01",
+                "UNIT_ID": "Thanh",
+                "PALLET_ID": "423",
+                "QUANTITY_INCOME": 225,
+                "ACTUAL_WEIGHT": 0.377,
+                "STARTED_DATE_ACTUAL": "31/08/2023",
+                "FINISHED_DATE_ACTUAL": "31/08/2023"
+            },
+            {
+                "PURCHASE_ORDER_CODE": "YCKD08/23-00133 - WHS-248.1/Hàng hoá già",
+                "CUSTOMER_ID": "WHS",
+                "LOT_NUMBER": "230826M3A4",
+                "PO_DETAILS_PROD_CODE": "WHS-F120-3-TSU01",
+                "COLOR_ID": "TSU01",
+                "UNIT_ID": "Thanh",
+                "PALLET_ID": "423",
+                "QUANTITY_INCOME": 33,
+                "ACTUAL_WEIGHT": 0.405,
+                "STARTED_DATE_ACTUAL": "31/08/2023",
+                "FINISHED_DATE_ACTUAL": "31/08/2023"
+            },
+            {
+                "PURCHASE_ORDER_CODE": "YCKD08/23-00133 - WHS-248.1/Hàng hoá già",
+                "CUSTOMER_ID": "WHS",
+                "LOT_NUMBER": "230826M3A2",
+                "PO_DETAILS_PROD_CODE": "WHS-F100-3-TSU01",
+                "COLOR_ID": "TSU01",
+                "UNIT_ID": "Thanh",
+                "PALLET_ID": "423",
+                "QUANTITY_INCOME": 210,
+                "ACTUAL_WEIGHT": 0.299,
+                "STARTED_DATE_ACTUAL": "31/08/2023",
+                "FINISHED_DATE_ACTUAL": "31/08/2023"
+            },
+            {
+                "PURCHASE_ORDER_CODE": "YCKD08/23-00133 - WHS-248.1/Hàng hoá già",
+                "CUSTOMER_ID": "WHS",
+                "LOT_NUMBER": "230825M3C3",
+                "PO_DETAILS_PROD_CODE": "WHS-F100-3-TSU01",
+                "COLOR_ID": "TSU01",
+                "UNIT_ID": "Thanh",
+                "PALLET_ID": "0083",
+                "QUANTITY_INCOME": 132,
+                "ACTUAL_WEIGHT": 0.299,
+                "STARTED_DATE_ACTUAL": "31/08/2023",
+                "FINISHED_DATE_ACTUAL": "31/08/2023"
+            },
+            {
+                "PURCHASE_ORDER_CODE": "YCKD08/23-00133 - WHS-248.1/Hàng hoá già",
+                "CUSTOMER_ID": "WHS",
+                "LOT_NUMBER": "230828M3C1",
+                "PO_DETAILS_PROD_CODE": "WHS-F100-3-TSU01",
+                "COLOR_ID": "TSU01",
+                "UNIT_ID": "Thanh",
+                "PALLET_ID": "423",
+                "QUANTITY_INCOME": 88,
+                "ACTUAL_WEIGHT": 0.311,
+                "STARTED_DATE_ACTUAL": "31/08/2023",
+                "FINISHED_DATE_ACTUAL": "31/08/2023"
+            },
+            {
+                "PURCHASE_ORDER_CODE": "YCKD08/23-00131 - WHS-248.1/Hàng không hoá già",
+                "CUSTOMER_ID": "WHS",
+                "LOT_NUMBER": "230828M2A13",
+                "PO_DETAILS_PROD_CODE": "WHS-A60-3-TSU01",
+                "COLOR_ID": "TSU01",
+                "UNIT_ID": "Thanh",
+                "PALLET_ID": "947",
+                "QUANTITY_INCOME": 213,
+                "ACTUAL_WEIGHT": 0.142,
+                "STARTED_DATE_ACTUAL": "31/08/2023",
+                "FINISHED_DATE_ACTUAL": "31/08/2023"
+            },
+            {
+                "PURCHASE_ORDER_CODE": "YCKD08/23-00131 - WHS-248.1/Hàng không hoá già",
+                "CUSTOMER_ID": "WHS",
+                "LOT_NUMBER": "230828M2C2",
+                "PO_DETAILS_PROD_CODE": "WHS-A60-3-TSU01",
+                "COLOR_ID": "TSU01",
+                "UNIT_ID": "Thanh",
+                "PALLET_ID": "947",
+                "QUANTITY_INCOME": 707,
+                "ACTUAL_WEIGHT": 0.154,
+                "STARTED_DATE_ACTUAL": "31/08/2023",
+                "FINISHED_DATE_ACTUAL": "31/08/2023"
+            },
+            {
+                "PURCHASE_ORDER_CODE": "YCKD08/23-00131 - WHS-248.1/Hàng không hoá già",
+                "CUSTOMER_ID": "WHS",
+                "LOT_NUMBER": "230828M4A5",
+                "PO_DETAILS_PROD_CODE": "WHS-A25-3-TSU01",
+                "COLOR_ID": "TSU01",
+                "UNIT_ID": "Thanh",
+                "PALLET_ID": "2025",
+                "QUANTITY_INCOME": 547,
+                "ACTUAL_WEIGHT": 0.07,
+                "STARTED_DATE_ACTUAL": "31/08/2023",
+                "FINISHED_DATE_ACTUAL": "31/08/2023"
+            },
+            {
+                "PURCHASE_ORDER_CODE": "YCKD08/23-00160 - AAW-007/ CTA-TSU01 ( đã +5t)",
+                "CUSTOMER_ID": "AAW",
+                "LOT_NUMBER": "230830M4A3",
+                "PO_DETAILS_PROD_CODE": "CTA-DS38-6-TSU01",
+                "COLOR_ID": "TSU01",
+                "UNIT_ID": "Thanh",
+                "PALLET_ID": "757",
+                "QUANTITY_INCOME": 8,
+                "ACTUAL_WEIGHT": 0.186,
+                "STARTED_DATE_ACTUAL": "31/08/2023",
+                "FINISHED_DATE_ACTUAL": "31/08/2023"
+            },
+            {
+                "PURCHASE_ORDER_CODE": "YCKD08/23-00160 - AAW-007/ CTA-TSU01 ( đã +5t)",
+                "CUSTOMER_ID": "AAW",
+                "LOT_NUMBER": "230829M4C6",
+                "PO_DETAILS_PROD_CODE": "CTA-1611-6-TSU01",
+                "COLOR_ID": "TSU01",
+                "UNIT_ID": "Thanh",
+                "PALLET_ID": "248",
+                "QUANTITY_INCOME": 119,
+                "ACTUAL_WEIGHT": 0.08,
+                "STARTED_DATE_ACTUAL": "31/08/2023",
+                "FINISHED_DATE_ACTUAL": "31/08/2023"
+            },
+            {
+                "PURCHASE_ORDER_CODE": "YCKDKD08/23-00138 - NTTDH-035/ CTA",
+                "CUSTOMER_ID": "NTTDH",
+                "LOT_NUMBER": "230829M4C2",
+                "PO_DETAILS_PROD_CODE": "CTA-1312-6-TSU01",
+                "COLOR_ID": "TSU01",
+                "UNIT_ID": "Thanh",
+                "PALLET_ID": "248",
+                "QUANTITY_INCOME": 72,
+                "ACTUAL_WEIGHT": 0.046,
+                "STARTED_DATE_ACTUAL": "31/08/2023",
+                "FINISHED_DATE_ACTUAL": "31/08/2023"
+            },
+            {
+                "PURCHASE_ORDER_CODE": "YCKD08/23-00160 - AAW-007/ CTA-TSU01 ( đã +5t)",
+                "CUSTOMER_ID": "AAW",
+                "LOT_NUMBER": "230829M4C4",
+                "PO_DETAILS_PROD_CODE": "CTA-1111A-6-TSU01",
+                "COLOR_ID": "TSU01",
+                "UNIT_ID": "Thanh",
+                "PALLET_ID": "248",
+                "QUANTITY_INCOME": 95,
+                "ACTUAL_WEIGHT": 0.152,
+                "STARTED_DATE_ACTUAL": "31/08/2023",
+                "FINISHED_DATE_ACTUAL": "31/08/2023"
+            },
+            {
+                "PURCHASE_ORDER_CODE": "YCKD08/23-00160 - AAW-007/ CTA-TSU01 ( đã +5t)",
+                "CUSTOMER_ID": "AAW",
+                "LOT_NUMBER": "230829M4C3",
+                "PO_DETAILS_PROD_CODE": "CTA-1018A-6-TSU01",
+                "COLOR_ID": "TSU01",
+                "UNIT_ID": "Thanh",
+                "PALLET_ID": "248",
+                "QUANTITY_INCOME": 97,
+                "ACTUAL_WEIGHT": 0.111,
+                "STARTED_DATE_ACTUAL": "31/08/2023",
+                "FINISHED_DATE_ACTUAL": "31/08/2023"
+            },
+            {
+                "PURCHASE_ORDER_CODE": "YCKD08/23-00160 - AAW-007/ CTA-TSU01 ( đã +5t)",
+                "CUSTOMER_ID": "AAW",
+                "LOT_NUMBER": "230830M4A4",
+                "PO_DETAILS_PROD_CODE": "CTA-1017E-6-TSU01",
+                "COLOR_ID": "TSU01",
+                "UNIT_ID": "Thanh",
+                "PALLET_ID": "757",
+                "QUANTITY_INCOME": 120,
+                "ACTUAL_WEIGHT": 0.245,
+                "STARTED_DATE_ACTUAL": "31/08/2023",
+                "FINISHED_DATE_ACTUAL": "31/08/2023"
+            },
+            {
+                "PURCHASE_ORDER_CODE": "YCKD08/23-00162 - AAW-009 ( Đã +5t)",
+                "CUSTOMER_ID": "AAW",
+                "LOT_NUMBER": "230830M2A8",
+                "PO_DETAILS_PROD_CODE": "CTA-077-6-TSU01",
+                "COLOR_ID": "TSU01",
+                "UNIT_ID": "Thanh",
+                "PALLET_ID": "2070",
+                "QUANTITY_INCOME": 16,
+                "ACTUAL_WEIGHT": 0.391,
+                "STARTED_DATE_ACTUAL": "31/08/2023",
+                "FINISHED_DATE_ACTUAL": "31/08/2023"
+            },
+            {
+                "PURCHASE_ORDER_CODE": "YCKD08/23-00164 - AAW-011/ TSU ( đã +5t)",
+                "CUSTOMER_ID": "AAW",
+                "LOT_NUMBER": "230829M3C11",
+                "PO_DETAILS_PROD_CODE": "CTX-3202B-6-TSU01",
+                "COLOR_ID": "TSU01",
+                "UNIT_ID": "Thanh",
+                "PALLET_ID": "757",
+                "QUANTITY_INCOME": 16,
+                "ACTUAL_WEIGHT": 1.037,
+                "STARTED_DATE_ACTUAL": "31/08/2023",
+                "FINISHED_DATE_ACTUAL": "31/08/2023"
+            }
+        ]
+    }
+    let jsonData = jsonData1.CTA_Paint;
+    console.log(jsonData.CTA_Paint)
+
+    let headerHTMLString = '<div class="header-labels">' +
+        '    <div class="logo">' +
+        '        <img src="./CTA-logo.png" alt="">' +
+        '    </div>' +
+
+        '    <div class="report-name">' +
+        '        <h3>BÁO CÁO THỐNG KÊ</h3>' +
+        '    </div>' +
+
+        '    <div class="report-number">' +
+        '        <div class="report-number-detail">' +
+        '            <p>Mã số:</p>' +
+        '        </div>' +
+
+        '        <div class="report-number-detail">' +
+        '            <p>Lần NH/L sửa:</p>' +
+        '        </div>' +
+
+        '        <div class="report-number-detail">' +
+        '            <p>Soạn:</p>' +
+        '        </div>' +
+
+        '        <div class="report-number-detail">' +
+        '            <p>Áp dụng:</p>' +
+        '        </div>' +
+        '    </div>' +
+        '</div>';
+    let footerHTMLString = '<div class="footer">' +
+        '    <p>Người lập</p>' +
+        '    <p>Người phê duyệt</p>' +
+        '</div>' +
+        '</div>'
+
+    // Create a Tabulator table
+    let table = new Tabulator("#example-table", {
+        data: jsonData,
+        layout: "fitColumns",
+        responsiveLayout: "true",
+        height: "auto",
+        // groupBy: ["PURCHASE_ORDER_CODE", "PO_DETAILS_PROD_CODE"],
+        groupBy: "PURCHASE_ORDER_CODE",
+        groupHeader: function (value, count, data, group) {
+            //value - the value all members of this group share
+            //count - the number of rows in this group
+            //data - an array of all the row data objects in this group
+            //group - the group component for the group
+
+            return value + "<span style='color:#d00; margin-left:10px;'>(" + count + " sản phẩm)</span>";
+        },
+        printAsHtml: true,
+        printHeader: headerHTMLString,
+        printFooter: footerHTMLString,
+        // height: "100%",
+        columnHeaderVertAlign: "bottom", //align header contents to bottom of cell
+        responsiveLayout: "hide",
+
+        columns: [
+            // { title: "Số YC", field: "PURCHASE_ORDER_CODE", width: 300 },
+            {//create column group
+                title: "Thông tin cơ bản",
+                columns: [
+                    { title: "Lot sản phẩm", field: "LOT_NUMBER", hozAlign: "left", width: 160 },
+                    { title: "Số giá", field: "PALLET_ID", hozAlign: "center", width: 120 },
+                    { title: "Mã sản phẩm", field: "PO_DETAILS_PROD_CODE", hozAlign: "left", sorter: "number", width: 200 },
+                ],
+            },
+            {//create column group
+                title: "Thông tin chi tiết",
+                columns: [
+                    { title: "Số lượng thanh", field: "QUANTITY_INCOME", hozAlign: "center", bottomCalc: "sum", bottomCalcParams: { precision: 0 }, width: 140 },
+                    { title: "Trọng lượng 1 thanh (kg)", field: "ACTUAL_WEIGHT", hozAlign: "center", width: 200 },
+                ],
+            },
+        ],
+    });
+
+    // window.jsPDF = window.jspdf.jsPDF;
+    // var docPDF = new jsPDF('l', 'pt', 'a3');
+    // docPDF.addFont('./SVN-Times New Roman.ttf', 'Times New Roman', 'normal');
+    // docPDF.setFont('Times New Roman');
+    function print1() {
+        // var elementHTML = document.querySelector("#container");
+        // docPDF.html(elementHTML, {
+        //     callback: function (docPDF) {
+        //         docPDF.save('HTML Linuxhint web page.pdf');
+        //     },
+        //     orientation: "landscape",
+        //     x: 15,
+        //     y: 15,
+        // });
+
+        // table.print(false, true);
+        print();
+    }
+
+</script>
+<style>
+    body {
+        display: flex;
+        flex-direction: column;
+    }
+
+    #container {
+        margin: 0 auto;
+    }
+
+    .header-labels {
+        display: flex;
+        flex-direction: row;
+        height: auto;
+        border: 1px solid #000;
+        justify-content: space-between;
+        margin: auto;
+    }
+
+    .header-labels>.logo {
+        width: 100px;
+        height: auto;
+        /* border-right: 1px solid #000; */
+        border: 1px solid #000;
+        border-left: none;
+        display: flex;
+        justify-self: center;
+    }
+
+    .header-labels>.logo>img {
+        height: auto;
+        /* object-fit: cover; */
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-position: center;
+    }
+
+    .header-labels>.report-name {
+        font-size: 32px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .header-labels>.report-name>h3 {
+        margin: auto auto;
+    }
+
+    .header-labels>.report-number {
+        height: 100%;
+        width: 160px;
+        border-left: 1px solid #000;
+    }
+
+    .header-labels>.report-number>.report-number-detail>p {
+        margin: 2px 4px !important;
+    }
+
+    .header-labels>.report-number>.report-number-detail {
+        border-bottom: 1px solid #000;
+    }
+
+    .header-labels>.report-number>.report-number-detail:last-child {
+        border-bottom: none;
+    }
+
+    #pageprint {
+        margin-top: 40px;
+        display: flex;
+    }
+
+    #example-table {
+        margin: 0 auto;
+    }
+
+    .footer {
+        display: flex;
+        flex-direction: row;
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .footer>p {
+        margin: 20px auto;
+    }
+
+    @media print {
+        body {
+            visibility: hidden;
+        }
+
+        .wrapper {
+            visibility: visible;
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            display: flex !important;
+            flex-direction: column !important;
+
+        }
+
+        #container {
+            width: 1200px;
+            display: flex !important;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .header-labels>.logo {
+            width: 100px;
+            height: auto;
+            border: 1px solid #000 !important;
+            border-left: none;
+            display: flex;
+            justify-self: center;
+        }
+
+        .header-labels>.report-name {
+            font-size: 32px;
+            display: flex;
+            flex-direction: column;
+
+        }
+
+        .header-labels>.report-name>h3 {
+            margin: auto 200px !important;
+        }
+
+        #pageprint {
+            width: 100%;
+            position: relative;
+            display: flex !important;
+            justify-content: center;
+            align-items: center;
+            margin-top: 40px !important;
+        }
+
+        #example-table {
+            margin: 0 auto !important;
+        }
+    }
+</style>
+
+</html>

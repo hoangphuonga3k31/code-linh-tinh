@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Read Excel File</title>
+    <script src="xlsx.js"></script>
+
+</head>
+
+<body>
+    <input type="file"
+        accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+        class="csv-input" />
+</body>
+<script>
+    let inputCSV = document.querySelector(".csv-input");
+
+    inputCSV.addEventListener("change", async function (e) {
+        let file = e.target.files[0];
+        let reader = new FileReader();
+
+        reader.onload = function (e) {
+            let data = new Uint8Array(e.target.result);
+            let workbook = XLSX.read(data, { type: 'array' });
+
+            let result = {};
+
+            workbook.SheetNames.forEach(function (sheetName) {
+                let worksheet = workbook.Sheets[sheetName];
+                let json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+                // Skip the second row of data
+                json.splice(1, 1);
+
+                let sheetData = [];
+
+                // Extracting data from each row
+                for (let i = 1; i < json.length; i++) {
+                    let rowData = {};
+                    for (let j = 0; j < json[0].length; j++) {
+                        rowData[json[0][j]] = json[i][j];
+                    }
+                    sheetData.push(rowData);
+                }
+
+                result[sheetName] = sheetData;
+            });
+
+            let jsonData = JSON.stringify(result);
+
+            console.log(jsonData)
+        };
+
+        reader.readAsArrayBuffer(file);
+    });
+
+</script>
+
+</html>

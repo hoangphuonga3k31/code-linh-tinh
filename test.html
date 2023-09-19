@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/tabulator/5.0.5/css/tabulator.min.css" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tabulator/5.0.5/js/tabulator.min.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.0.0/jquery.min.js"></script>
+
+  <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.14/jspdf.plugin.autotable.min.js"></script> -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"
+    integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+
+<body>
+  <div id="container" style="width: 1200px;">
+    <div class="header-labels">
+      <div class="logo">
+        <img src="./CTA-logo.png" alt="">
+      </div>
+      <div class="report-name">
+        <h3>BÁO CÁO THỐNG KÊ</h3>
+      </div>
+      <div class="report-number">
+        <div class="report-number-detail">
+          <p>Mã số:</p>
+        </div>
+        <div class="report-number-detail">
+          <p>Lần NH/L sửa:</p>
+        </div>
+        <div class="report-number-detail">
+          <p>Soạn:</p>
+        </div>
+        <div class="report-number-detail">
+          <p>Áp dụng:</p>
+        </div>
+      </div>
+    </div>
+    <div id="pageprint" style="width: 100%;">
+      <div id="example-table">
+        <p>aaaaaaaaa</p>
+      </div>
+    </div>
+    <div class="footer">
+      <p>Người lập</p>
+      <p>Người phê duyệt</p>
+    </div>
+  </div>
+  <div class="download-button">
+    <button id="download-reporting-file" onclick="print()">Download</button>
+  </div>
+</body>
+<style>
+
+</style>
+
+</html>

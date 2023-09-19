@@ -1,0 +1,46 @@
+#spr1_4cd436,
+#spr2_4cd436 {
+  clip: rect(0px, 960px, 540px, 0px);
+}
+#svg3_4cd436 {
+  -webkit-transform-origin: 1px 0.5px;
+  -moz-transform-origin: 1px 0.5px;
+  -o-transform-origin: 1px 0.5px;
+  -ms-transform-origin: 1px 0.5px;
+  transform-origin: 1px 0.5px;
+}
+#txt0_4cd436 {
+  font-family: fnt4;
+  font-size: 32px;
+  line-height: 51px;
+  font-weight: bold;
+  color: #ffffff;
+}
+#txt1_4cd436 {
+  font-family: fnt4;
+  font-size: 31.5px;
+  line-height: 50px;
+  font-weight: bold;
+  color: #ffffff;
+}
+#txt2_4cd436 {
+  font-family: fnt4;
+  font-size: 25.3px;
+  line-height: 40px;
+  font-weight: bold;
+  color: #ffffff;
+}
+#txt3_4cd436 {
+  font-family: fnt4;
+  font-size: 24px;
+  line-height: 38px;
+  font-weight: bold;
+  color: #ffffff;
+}
+#txt4_4cd436 {
+  font-family: fnt4;
+  font-size: 18px;
+  line-height: 29px;
+  font-weight: bold;
+  color: #ffffff;
+}
