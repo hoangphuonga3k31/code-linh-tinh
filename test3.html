@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <script src="./print.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <div id="content"></div>
+
+    <title>Document</title>
+  </head>
+
+  <body>
+    <button class="download-button">Click</button>
+  </body>
+  <script>
+    var resData = { key1: "value", key2: "value" };
+
+    var table_str =
+      "<table><thead><tr><th>Filter</th><th>Values</th></tr></thead>";
+    table_str += "<tbody>";
+    $.each(resData, function (key, value) {
+      table_str += "<tr><td>" + key + "</td><td>" + value + "</td></tr>";
+    });
+    $("#content").html(table_str);
+    console.log(table_str);
+  </script>
+</html>

@@ -1,96 +1,65 @@
-if (me.X1_4M1_A1P48 == false) {
+let finalResult = Resources["InfoTableFunctions"].CreateInfoTableFromDataShape({
+    infoTableName: "InfoTable",
+    dataShapeName: "AES.DataShape.Dynamic.WHM_MATERIAL_VOUCHER_DETAILS"
+});
+
+// let Material = me.LoadingData({
+// 	strQuery: "select top 1 * from WHM_MATERIAL_VOUCHER where VOUCHER_TYPE = 'OUT' order by PR_KEY desc"
+// });
+
+let Material = me.LoadingData({
+	strQuery: "select top 1 * from PRODUCTION_BILLET_MASTER where STATUS != 'C' order by PR_KEY"
+});
+
+if(Material.getRowCount() > 0) {
+	let Material_detail = me.LoadingData({
+		strQuery: "select top 1 * from WHM_MATERIAL_VOUCHER_DETAILS where FR_KEY = " + Material.rows[0].WHM_MATERIAL_VOUCHER_ID
+	});
+	let quantitynew = Material_detail.rows[0].QUANTITY;
+	
+	let Material_detail_ver2 = me.LoadingData({
+		strQuery: "select * from WHM_MATERIAL_VOUCHER_DETAILS where WORK_ORDER_ID = " + Material_detail.rows[0].WORK_ORDER_ID
+	});
+	let quantity_ver2 = 0;
+	
+	for (let i = 0; i < Material_detail_ver2.getRowCount(); i++) {
+		quantity_ver2 += Material_detail_ver2.rows[i].QUANTITY;
+	};
+	Material_detail.rows[0].QUANTITY = quantity_ver2;
+	
+	let BilletInfo = me.LoadingData({
+		strQuery: "select * from PRODUCTION_BILLET_INFO where WORK_ORDER_ID = " + Material_detail.rows[0].WORK_ORDER_ID
+	});
+	Material_detail.rows[0].QUANTITY = Material_detail.rows[0].QUANTITY - BilletInfo.getRowCount();
+	
+	let WorkOrders = me.LoadingData({
+		strQuery: "select * from WORK_ORDERS where PR_KEY = " + Material_detail.rows[0].WORK_ORDER_ID
+	});
+	
+	let Materials = me.LoadingData({
+		strQuery: "select * from MD_MATERIALS where MATERIAL_ID = " + Material_detail.rows[0].MATERIAL_ID
+	});
+	
+	let Alloys = me.LoadingData({
+		strQuery: "select * from MD_ALLOYS where ALLOYS_ID = " + Materials.rows[0].ALLOYS_ID
+	});
+	let DataLotBillet = Material_detail.rows[0].LOT_NUMBER.toString().padEnd(14, " ");
+	
+	Material_detail.rows[0].LOT_NUMBER = (Material_detail.getRowCount() > 0 ? Material_detail.rows[0].LOT_NUMBER : "-") + "," + 
+										 (WorkOrders.getRowCount() > 0 ? WorkOrders.rows[0].WORK_ORDER_CODE : "-") + "," +
+										 (Alloys.getRowCount() > 0 ? Alloys.rows[0].ALLOYS_CODE : "-") + "," + 
+										 (Alloys.getRowCount() > 0 ? Alloys.rows[0].ALLOYS_NAME : "-") + "," + 
+										 (Materials.getRowCount() > 0 ? Materials.rows[0].MATERIAL_CODE : "-")
 	let a = 0;
-} else {
-	let runningWOKEY = -1;
-	let runningWO = me.LoadingData({
-		strQuery: "select PR_KEY from WORK_ORDERS where WORK_ORDER_TYPE = 'W_DEP' and STATUS = '2'"
-	});
-	if (runningWO.getRowCount > 0) {
-		runningWOKEY = runningWO.rows[0].PR_KEY;
-	} else {
-		let ReleasedWO = me.LoadingData({
-			strQuery: "select top 1 PR_KEY from WORK_ORDERS where WORK_ORDER_TYPE = 'W_DEP' and STATUS = '1' order by UPDATED_DATE desc"
-		})
-		if (ReleasedWO.getRowCount() > 0) {
-			runningWOKEY = ReleasedWO.rows[0].PR_KEY
+	for (let i = 0; i < 9; i++) {
+		let dataTagString = "X1_4M1_A1P0" + i;
+		if (Things["CTA.Common.Categories.BilletHeating_ScanMSSQL500ms"][dataTagString] != "                                ") {
+			a++;
 		}
-	}
-	// lấy dữ liệu từ tag
-	//	let LotBillet_String = "".replace(/\s/g, '');
-	//	let CodeBillet_String = "".replace(/\s/g, '');
-	//	let NumberOfBillet_Int = 0;
-	let LotBillet_String = me.X1_4M1_A1P45.replace(/\s/g, '');
-	let CodeBillet_String = me.X1_4M1_A1P46.replace(/\s/g, '');
-	let NumberOfBillet_Int = me.X1_4M1_A1P47;
+	};
 
-	let currentDatetime = Things["CTA.Business.Product.PO.PurchaseOrderDetails"].GetdateTime();
-	let TimeDateAndShiftData = Things["CTA.Business.Product.PO.PurchaseOrder"].GetTimeDateAndShift();
-
-	//check dữ liệu tồn tại chưa
-	let checkMaterialData = me.LoadingData({
-		strQuery: "select MATERIAL_ID from MD_MATERIALS where MATERIAL_CODE = '" + CodeBillet_String + "'"
-	});
-	let queryString = "select * from PRODUCTION_BILLET_MASTER where MATERIAL_LOT_NUMBER = '" + LotBillet_String + "' and ACTIVE = 1 and MATERIAL_ID = " + checkMaterialData.rows[0].MATERIAL_ID;
-	let checkExistedBillet = me.LoadingData({
-		strQuery: queryString /* STRING [Required] */
-	});
-
-	switch (checkExistedBillet.getRowCount() > 0) {
-		case false: // chưa có, tạo bản ghi mới
-			let dataTableToInsert = Resources["InfoTableFunctions"].CreateInfoTableFromDataShape({
-				infoTableName: "InfoTable",
-				dataShapeName: "AES.DataShape.Dynamic.PRODUCTION_BILLET_MASTER"
-			});
-
-			let VoucherDetailID = -1;
-			if (runningWOKEY != -1) {
-				let VoucherDetailData = me.LoadingData({
-					strQuery: "select FR_KEY from WHM_MATERIAL_VOUCHER_DETAILS where WORK_ORDER_ID = " + runningWOKEY + " and LOT_NUMBER = '" + LotBillet_String + "'"
-				})
-				if (VoucherDetailData.getRowCount() > 0) {
-					VoucherDetailID = VoucherDetailData.rows[0].FR_KEY;
-				}
-			}
-			let newEntryToInsert = {
-				WORK_LINE_ID: "Line_04", // STRING
-				WORK_SHIFT_ID: TimeDateAndShiftData.rows[0].SHIFT, // INTEGER
-				WHM_MATERIAL_VOUCHER_ID: VoucherDetailID, // NUMBER
-				MATERIAL_ID: checkMaterialData.rows[0].MATERIAL_ID, // INTEGER
-				MATERIAL_LOT_NUMBER: LotBillet_String, // STRING
-				QUALITY: NumberOfBillet_Int, // INTEGER
-				CHECK_IN_DATE: currentDatetime, // DATETIME
-				STATUS: 'W', // STRING
-				ACTIVE: 1, // BOOLEAN
-			};
-			dataTableToInsert.AddRow(newEntryToInsert);
-			Things["CTA.Business.Categories.PRODUCTION_BILLET_MASTER"].SetExecuteData({
-				Data: dataTableToInsert /* INFOTABLE {"dataShape":"AES.DataShape.Dynamic.PRODUCTION_BILLET_MASTER"} */,
-				Flag: "ADD" /* STRING */
-			});
-			break;
-
-		case true: // đã có, update bản ghi cũ
-			checkExistedBillet.rows[0].QUALITY += NumberOfBillet_Int;
-			Things["CTA.Business.Categories.PRODUCTION_BILLET_MASTER"].SetExecuteData({
-				Data: checkExistedBillet /* INFOTABLE {"dataShape":"AES.DataShape.Dynamic.PRODUCTION_BILLET_MASTER"} */,
-				Flag: "EDIT" /* STRING */
-			});
-			break;
-	}
-	//tạo chuỗi và gắn lên tag trống
-	let DataString =
-		CodeBillet_String.padEnd(16, ' ') +
-		LotBillet_String.padEnd(14, ' ') +
-		NumberOfBillet_Int.toString().padEnd(2, " ");
-
-	for (let i = 0; i < 10; i++) {
-		let tagName = "X1_4M1_A1P0" + i.toString().padEnd(1, "0");
-		let tagData = me[tagName];
-		if (tagData.length > 0 && tagData.replace(/\s/g, '').length > 0) {
-			let z = 0;
-		} else {
-			me[tagName] = DataString;
-			break;
-		}
-	}
+	finalResult = Material_detail
 }
+
+
+result = finalResult;
