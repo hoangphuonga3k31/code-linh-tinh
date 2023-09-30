@@ -1,255 +1,9 @@
 {
-    "Mẫu in tài liệu kinh doanh": [
+    "CTA_PurchaseOrder": [
         {
-            "Stt": 94,
-            "PURCHASE_ORDER_CODE": "YCKD06/23-00110",
-            "Chiều dài đoạn": 0,
-            "Hợp kim": "6063-T5",
-            "Số lượng thanh": 5008,
-            "MOLD_ID": "CTA-1020M-1CMM",
-            "Chiều dài đoạn thực tế(mm)": 0,
-            "Số lượng đoạn": 0,
-            "Ghi chú": "GẤP"
-        },
-        {
-            "Stt": 95,
-            "PURCHASE_ORDER_CODE": "YCKD07/23-00074",
-            "Chiều dài đoạn": 0,
-            "Hợp kim": "6063-T5",
-            "Số lượng thanh": 2000,
-            "MOLD_ID": "NEP-F",
-            "Chiều dài đoạn thực tế(mm)": 0,
-            "Số lượng đoạn": 0,
-            "Ghi chú": "GẤP"
-        },
-        {
-            "Stt": 96,
-            "PURCHASE_ORDER_CODE": "YCKD07/23-00067",
-            "Chiều dài đoạn": 0,
-            "Hợp kim": "6063-T5",
-            "Số lượng thanh": 678,
-            "MOLD_ID": "CT-M1-WHS-GP19-1BR",
-            "Chiều dài đoạn thực tế(mm)": 0,
-            "Số lượng đoạn": 0,
-            "Ghi chú": "GẤP"
-        },
-        {
-            "Stt": 97,
-            "PURCHASE_ORDER_CODE": "YCKD07/23-00075",
-            "Chiều dài đoạn": 0,
-            "Hợp kim": "6063-T5",
-            "Số lượng thanh": 219,
-            "MOLD_ID": "CT-WHS-VX01-11VLT\nCT-WHS-VX01-12VLT\nCT-WHS-VX01-13VLT",
-            "Chiều dài đoạn thực tế(mm)": 0,
-            "Số lượng đoạn": 0
-        },
-        {
-            "Stt": 98,
-            "PURCHASE_ORDER_CODE": "YCKD07/23-00033",
-            "Chiều dài đoạn": 0,
-            "Hợp kim": "6063-T5",
-            "Số lượng thanh": 3000,
-            "MOLD_ID": "CT-M1-WHS-STA04-11BR",
-            "Chiều dài đoạn thực tế(mm)": 0,
-            "Số lượng đoạn": 0,
-            "Ghi chú": "GẤP"
-        },
-        {
-            "Stt": 99,
-            "PURCHASE_ORDER_CODE": "YCKD07/23-00039",
-            "Chiều dài đoạn": 0,
-            "Hợp kim": "6063-T5",
-            "Số lượng thanh": 12,
-            "MOLD_ID": "CTS-M1-CS09-1CMM\nCTS-M1-CS09-2CMM",
-            "Chiều dài đoạn thực tế(mm)": 0,
-            "Số lượng đoạn": 0
-        },
-        {
-            "Stt": 100,
-            "PURCHASE_ORDER_CODE": "YCKD06/23-00085",
-            "Chiều dài đoạn": 0,
-            "Hợp kim": "6063-T5",
-            "Số lượng thanh": 34,
-            "MOLD_ID": "CT-M2-1611-1BR\nCTA-1611-VLT-1\nCTA-1611-VLT-2",
-            "Chiều dài đoạn thực tế(mm)": 0,
-            "Số lượng đoạn": 0
-        },
-        {
-            "Stt": 101,
-            "PURCHASE_ORDER_CODE": "YCKDKD06/23-00084",
-            "Chiều dài đoạn": 0,
-            "Hợp kim": "6063-T5",
-            "Số lượng thanh": 148,
-            "MOLD_ID": "CTA-1017B-5VLT\nCTA-1017B-6VLT\nCTA-1017B-7VLT",
-            "Chiều dài đoạn thực tế(mm)": 0,
-            "Số lượng đoạn": 0
-        },
-        {
-            "Stt": 102,
-            "PURCHASE_ORDER_CODE": "YCKD06/23-00085",
-            "Chiều dài đoạn": 0,
-            "Hợp kim": "6063-T5",
-            "Số lượng thanh": 84,
-            "MOLD_ID": "CT-M1-608-1BR\nCTA-M1-608-1VLT",
-            "Chiều dài đoạn thực tế(mm)": 0,
-            "Số lượng đoạn": 0
-        },
-        {
-            "Stt": 103,
-            "PURCHASE_ORDER_CODE": "YCKD06/23-00085",
-            "Chiều dài đoạn": 0,
-            "Hợp kim": "6063-T5",
-            "Số lượng thanh": 150,
-            "MOLD_ID": "CT-M1-609-1BR",
-            "Chiều dài đoạn thực tế(mm)": 0,
-            "Số lượng đoạn": 0
-        },
-        {
-            "Stt": 104,
-            "PURCHASE_ORDER_CODE": "YCKD06/23-00085",
-            "Chiều dài đoạn": 0,
-            "Hợp kim": "6063-T5",
-            "Số lượng thanh": 75,
-            "MOLD_ID": "CT-M2-613-1W\nCTA-613-VLT-1\nCTA-613-VLT-2",
-            "Chiều dài đoạn thực tế(mm)": 0,
-            "Số lượng đoạn": 0
-        },
-        {
-            "Stt": 105,
-            "PURCHASE_ORDER_CODE": "YCKD06/23-00085",
-            "Chiều dài đoạn": 0,
-            "Hợp kim": "6063-T5",
-            "Số lượng thanh": 24,
-            "MOLD_ID": "CT-M1-CTA-614M-1VLT",
-            "Chiều dài đoạn thực tế(mm)": 0,
-            "Số lượng đoạn": 0
-        },
-        {
-            "Stt": 106,
-            "PURCHASE_ORDER_CODE": "YCKD07/23-00016",
-            "Chiều dài đoạn": 0,
-            "Hợp kim": "6063-T5",
-            "Số lượng thanh": 60,
-            "MOLD_ID": "CT-M1-ALK-EUSP02-1BR\nCT-M1-ALK-EUSP02-1CMM",
-            "Chiều dài đoạn thực tế(mm)": 0,
-            "Số lượng đoạn": 0
-        },
-        {
-            "Stt": 107,
-            "PURCHASE_ORDER_CODE": "YCKDKD06/23-00084",
-            "Chiều dài đoạn": 0,
-            "Hợp kim": "6063-T5",
-            "Số lượng thanh": 150,
-            "MOLD_ID": "CT-M1-609-1BR",
-            "Chiều dài đoạn thực tế(mm)": 0,
-            "Số lượng đoạn": 0
-        },
-        {
-            "Stt": 108,
-            "PURCHASE_ORDER_CODE": "YCKDKD06/23-00084",
-            "Chiều dài đoạn": 0,
-            "Hợp kim": "6063-T5",
-            "Số lượng thanh": 150,
-            "MOLD_ID": "CT-M1-CTA-614M-1VLT",
-            "Chiều dài đoạn thực tế(mm)": 0,
-            "Số lượng đoạn": 0
-        },
-        {
-            "Stt": 109,
-            "PURCHASE_ORDER_CODE": "YCKDKD06/23-00084",
-            "Chiều dài đoạn": 0,
-            "Hợp kim": "6063-T5",
-            "Số lượng thanh": 200,
-            "MOLD_ID": "CTA-1611-VLT-1\nCTA-1611-VLT-2",
-            "Chiều dài đoạn thực tế(mm)": 0,
-            "Số lượng đoạn": 0
-        },
-        {
-            "Stt": 110,
-            "PURCHASE_ORDER_CODE": "YCKD05/23-00081",
-            "Chiều dài đoạn": 0,
-            "Hợp kim": "6063-T5",
-            "Số lượng thanh": 40,
-            "MOLD_ID": "CT-M1-D1B1-1BR",
-            "Chiều dài đoạn thực tế(mm)": 0,
-            "Số lượng đoạn": 0
-        },
-        {
-            "Stt": 111,
-            "PURCHASE_ORDER_CODE": "YCKDKD06/23-00084",
-            "Chiều dài đoạn": 0,
-            "Hợp kim": "6063-T5",
-            "Số lượng thanh": 150,
-            "MOLD_ID": "CTA-1312-VLT-2\nCTA-M1-1312-1BR",
-            "Chiều dài đoạn thực tế(mm)": 0,
-            "Số lượng đoạn": 0
-        },
-        {
-            "Stt": 112,
-            "PURCHASE_ORDER_CODE": "YCKDKD06/23-00084",
-            "Chiều dài đoạn": 0,
-            "Hợp kim": "6063-T5",
-            "Số lượng thanh": 200,
-            "MOLD_ID": "CT-M2-1214-1BR",
-            "Chiều dài đoạn thực tế(mm)": 0,
-            "Số lượng đoạn": 0
-        },
-        {
-            "Stt": 113,
-            "PURCHASE_ORDER_CODE": "YCKDKD06/23-00084",
-            "Chiều dài đoạn": 0,
-            "Hợp kim": "6063-T5",
-            "Số lượng thanh": 105,
-            "Chiều dài đoạn thực tế(mm)": 0,
-            "Số lượng đoạn": 0
-        },
-        {
-            "Stt": 114,
-            "PURCHASE_ORDER_CODE": "YCKD07/23-00016",
-            "Chiều dài đoạn": 0,
-            "Hợp kim": "6063-T5",
-            "Số lượng thanh": 60,
-            "Chiều dài đoạn thực tế(mm)": 0,
-            "Số lượng đoạn": 0
-        },
-        {
-            "Stt": 115,
-            "PURCHASE_ORDER_CODE": "YCKD07/23-00016",
-            "Chiều dài đoạn": 0,
-            "Hợp kim": "6063-T5",
-            "Số lượng thanh": 158,
-            "Chiều dài đoạn thực tế(mm)": 0,
-            "Số lượng đoạn": 0
-        },
-        {
-            "Stt": 116
-        },
-        {
-            "Stt": 117
-        },
-        {
-            "Stt": 118
-        },
-        {
-            "Stt": 119
-        },
-        {
-            "Stt": 120
-        },
-        {
-            "Stt": 121
-        },
-        {
-            "Stt": 122
-        },
-        {
-            "Stt": 123
-        },
-        {
-            "Stt": 124
-        },
-        {
-            "Stt": 125
+            "PURCHASE_ORDER_CODE": "M409/2023",
+            "PO_DETAILS_PROD_CODE": "CTA-TK",
+            "ERP_MOLD_CODE": "VEC-M1-ALK-EUL12023-1BR\nVEC-M1-WHS-QC02-1W\nVEC-M1-WHS-QC04-1W"
         },
         {},
         {},
@@ -257,5 +11,17 @@
         {},
         {},
         {}
-    ]
+    ],
+    "Sheet1": []
+}
+
+{
+    "CTA_PurchaseOrder": [
+        {
+            "PURCHASE_ORDER_CODE": "M409/2023",
+            "PO_DETAILS_PROD_CODE": "CTA-TK",
+            "ERP_MOLD_CODE": "VEC-M1-ALK-EUL12023-1BR\nVEC-M1-WHS-QC02-1W\nVEC-M1-WHS-QC04-1W"
+        }
+    ],
+    "Sheet1": []
 }

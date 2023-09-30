@@ -1,322 +1,583 @@
-var date = new Date();
-let WorkShiftData = Things["CTA.Business.Product.PO.PurchaseOrder"].GetTimeDateAndShift();
-// result: INFOTABLE dataShape: "AES.DataShape.Dynamic.WHM_MATERIAL_VOUCHER_DETAILS"
-let Billet_info = Things["CTA.Business.Production.Production_Billet_Info"].DataAll;
-let sort = {
-    name: "PR_KEY",
-    ascending: false
-};
-Billet_info.Sort(sort);
-let Data = Resources["InfoTableFunctions"].CreateInfoTableFromDataShape({
-    infoTableName: "InfoTable",
-    dataShapeName: "AES.DataShape.Dynamic.PRODUCTION_BILLET_INFO"
-});
-let UpdatingBilletInfoData = Resources["InfoTableFunctions"].CreateInfoTableFromDataShape({
-    infoTableName: "InfoTable",
-    dataShapeName: "AES.DataShape.Dynamic.PRODUCTION_BILLET_INFO"
-});
-Data.AddRow(Billet_info.rows[1]);
+try {
+    let convertDateString = (dateString) => {
+        var parts = dateString.split('/');
+        var isoString;
 
-// let Billet_info_data = me.LoadingData({
-//     strQuery: "SELECT * FROM PRODUCTION_BILLET_INFO WHERE WORK_ORDER_ID = "+ Billet_info.rows[1].WORK_ORDER_ID /* STRING [Required] */
-// });
+        if (parts.toString().length === 3) {
+            isoString = new Date(parts[2], parts[1] - 1, parts[0]);
+            isoString = isoString.toISOString();
+        } else {
+            isoString = dateString.replace(' ', 'T') + 'Z';
+        }
+        return isoString.toString();
+    };
 
-// let length = 0;
-// for (i = 0; i < Billet_info_data.getRowCount(); i++) {
-// 	length += Billet_info_data.rows[1].BILLET_TREE_INPUT_LENGTH;
-// }
-// let total_length = Things["CTA.Common.Categories.BilletHeating_ScanMSSQL500ms"].X1_4M1_A3C00 - length;
-
-Things["CTA.Business.Production.Production_Billet_Info"].SetExecuteDataUpdate({
-    User: Resources["CurrentSessionInfo"].GetCurrentUser() /* STRING */,
-    Length: me.X1_4M1_A3SE0 /* NUMBER */,
-    Data: Data /* INFOTABLE {"dataShape":"AES.DataShape.Dynamic.PRODUCTION_BILLET_INFO"} */,
-    Flag: "EDIT" /* STRING */,
-    Date: date /* DATETIME */
-});
-
-let NewDataFor_PRODUCTION_BILLET_MASTER = Resources["InfoTableFunctions"].CreateInfoTableFromDataShape({
-    infoTableName: "InfoTable",
-    dataShapeName: "AES.DataShape.Dynamic.PRODUCTION_BILLET_MASTER"
-});
-let updatingDataFor_PRODUCTION_BILLET_MASTER = Resources["InfoTableFunctions"].CreateInfoTableFromDataShape({
-    infoTableName: "InfoTable",
-    dataShapeName: "AES.DataShape.Dynamic.PRODUCTION_BILLET_MASTER"
-});
-
-let runningWO = me.LoadingData({
-    strQuery: "select * from WORK_ORDERS where STATUS = '2' and WORK_ORDER_TYPE = 'W_DEP'"
-});
-if (runningWO.getRowCount() == 0) {
-    runningWO = me.LoadingData({
-        strQuery: "select top 1 * from WORK_ORDERS where STATUS = '1' and WORK_ORDER_TYPE = 'W_DEP' order by UPDATED_DATE desc"
+    let NewPODetailData = Resources["InfoTableFunctions"].CreateInfoTableFromDataShape({
+        infoTableName: "InfoTable",
+        dataShapeName: "AES.DataShape.Dynamic.PURCHASE_ORDER_DETAILS"
     });
-}
-let LengthUsed = 0;
-for (let i = 0; i < 5; i++) {
-    let tagName = "X1_4M1_A1P1" + i;
-    let tagData = me[tagName];
 
-    function setData(quantityTagData) {
-        let dataToUpdate = me.LoadingData({
-            strQuery: "select * from PRODUCTION_BILLET_MASTER where MATERIAL_LOT_NUMBER = '" + tagData.substring(16, 30).replace(/\s/g, "") + "'" /* STRING [Required] */
+    let UpdatingPODetailData = Resources["InfoTableFunctions"].CreateInfoTableFromDataShape({
+        infoTableName: "InfoTable",
+        dataShapeName: "AES.DataShape.Dynamic.PURCHASE_ORDER_DETAILS"
+    });
+
+    let InvalidUpdatingPODetailData = Resources["InfoTableFunctions"].CreateInfoTableFromDataShape({
+        infoTableName: "InfoTable",
+        dataShapeName: "AES.DataShape.Dynamic.PURCHASE_ORDER_DETAILS"
+    });
+
+    let WorkOrderDataForAgingImporting = Resources["InfoTableFunctions"].CreateInfoTableFromDataShape({
+        infoTableName: "InfoTable",
+        dataShapeName: "AES.DataShape.Dynamic.WORK_ORDERS"
+    });
+
+    let DataForImportHGToShow = Resources["InfoTableFunctions"].CreateInfoTableFromDataShape({
+        infoTableName: "InfoTable",
+        dataShapeName: "AES.DataShape.Manual.PRODUCTION_MASTER_DETAIL_FOR_WAITING_HG"
+    });
+
+    let DataToImportDataInto_PRODUCTION_MASTER_DETAIL = Resources["InfoTableFunctions"].CreateInfoTableFromDataShape({
+        infoTableName: "InfoTable",
+        dataShapeName: "AES.DataShape.Dynamic.PRODUCTION_MASTER_DETAIL"
+    });
+
+    let DataForImporting_WHM_PRODUCT_MASTER = Resources["InfoTableFunctions"].CreateInfoTableFromDataShape({
+        infoTableName: "InfoTable",
+        dataShapeName: "AES.DataShape.Dynamic.WHM_PRODUCT_MASTER"
+    });
+
+    let DataForImporting_WHM_PRODUCT_VOUCHER = Resources["InfoTableFunctions"].CreateInfoTableFromDataShape({
+        infoTableName: "InfoTable",
+        dataShapeName: "AES.DataShape.Dynamic.WHM_PRODUCT_VOUCHER"
+    });
+
+    let DataForImporting_PRODUCTION_MASTER = Resources["InfoTableFunctions"].CreateInfoTableFromDataShape({
+        infoTableName: "InfoTable",
+        dataShapeName: "AES.DataShape.Dynamic.PRODUCTION_MASTER"
+    });
+
+    let currentDatetime = me.GetdateTime();
+    let currentDatetimeToString = currentDatetime.getFullYear().toString() + "-" + (parseInt(currentDatetime.getMonth()) + 1).toString().padStart(2, '0') + "-" + currentDatetime.getDate().toString().padStart(2, '0') + " " + currentDatetime.getHours().toString().padStart(2, '0') + ":" + currentDatetime.getMinutes().toString().padStart(2, '0') + ":" + currentDatetime.getSeconds().toString().padStart(2, '0');
+    let WarehouseData = me.LoadingData({
+        strQuery: "select WAREHOUSE_ID from MD_WAREHOUSES where WAREHOUSE_TYPE_ID = 'PROD'" /* STRING [Required] */
+    });
+
+    let cur = me.GetdateTime();
+    let startTime = new Date(cur);
+    startTime.setDate(cur.getDate() - 1);
+    startTime.setHours(0, 0, 0);
+    let yesterdayDatetimeToString = startTime.getFullYear().toString() + "-" + (parseInt(startTime.getMonth()) + 1).toString().padStart(2, '0') + "-" + startTime.getDate().toString().padStart(2, '0') + " " + startTime.getHours().toString().padStart(2, '0') + ":" + startTime.getMinutes().toString().padStart(2, '0') + ":" + startTime.getSeconds().toString().padStart(2, '0');
+
+    if (importedJsonData) {
+        let checkImportedProduct = Things["CTA.Business.Categories.MD_PRODUCT"].ValidateDataFromJSONForWHM({
+            JsonData: importedJsonData /* JSON */
         });
-        //check xem trong bảng PRODUCTION_BILLET_MASTER có chưa
-        if (dataToUpdate.getRowCount() > 0 && dataToUpdate.rows[0].STATUS != 'P') { // có rồi > update dữ liệu
-            dataToUpdate.rows[0].STATUS = 'P';
-            dataToUpdate.rows[0].QUALITY = quantityTagData;
-            if (dataToUpdate.rows[0].QUALITY == tagData.substring(30, 32).replace(/\s/g, "")) {
-                dataToUpdate.rows[0].STATUS = 'C';
-            }
-            updatingDataFor_PRODUCTION_BILLET_MASTER.AddRow(dataToUpdate.rows[0]);
-        } else { //chưa có > insert dữ liệu
-
-            // let newEntryForPBM = {
-            //     WORK_LINE_ID: "Line_04", // STRING
-            //     WORK_SHIFT_ID: WorkShiftData.rows[0].SHIFT, // INTEGER
-            //     WHM_MATERIAL_VOUCHER_ID: undefined, // NUMBER
-            //     MATERIAL_ID: undefined, // INTEGER
-            //     MATERIAL_LOT_NUMBER: undefined, // STRING
-            //     QUALITY: undefined, // INTEGER
-            //     CHECK_IN_DATE: date, // DATETIME
-            //     STATUS: "P", // STRING
-            //     ACTIVE: 1, // BOOLEAN
-            // };
-
-            // NewDataFor_PRODUCTION_BILLET_MASTER.AddRow(newEntryForPBM);
+        if (checkImportedProduct != "OK") {
+            throw (checkImportedProduct);
+        }
+        // if (isDataForAging) {
+        // 	Things["CTA.Business.Categories.MD_Pallet"].ValidateDataFromJSON({
+        // 		JsonData: importedJsonData /* JSON */
+        // 	});
+        // }
+        let checkPallet = Things["CTA.Business.Categories.MD_Pallet"].ValidateDataFromJSONCopyForWHM({
+            JsonData: importedJsonData /* JSON */
+        });
+        if (checkPallet != "OK") {
+            throw (checkPallet);
         }
 
-        //kiểm tra dữ liệu trong bảng PRODUCTION_BILLET_INFO, dựa theo lot
-        let PBIdata = me.LoadingData({
-            strQuery: "select PR_KEY from PRODUCTION_BILLET_INFO where MATERIAL_LOT_NUMBER = '" + tagData.substring(16, 30).replace(/\s/g, "") + "' order by NUMBER_BILLET_TREE_INPUT"
+        let importedPODetailData = importedJsonData["CTA_Paint"];
+        let i = 0;
+        let lastestPOID = me.Get_Pr_Key({
+            tableName: me.TableName /* STRING */
         });
-        if (PBIdata.getRowCount() > 0) { //nếu có dữ liệu, đọc từng row dữ liệu dựa theo số thanh xác định được từ tag
-            for (let zz = 0; zz < quantityTagData; zz++) {
-                LengthUsed += me["X1_4M1_A1P" + (26 + zz).toString().padStart(2, "0")];
-                let checkData = me.LoadingData({ // lấy dữ liệu dựa theo lot và thứ tự từng thanh
-                    strQuery: "select * from PRODUCTION_BILLET_INFO where MATERIAL_LOT_NUMBER = '" + tagData.substring(16, 30).replace(/\s/g, "") + "' and NUMBER_BILLET_TREE_INPUT = " + (zz + 1)
-                });
-                if (checkData.getRowCount() == 0) { //nếu chưa lưu bản ghi này > insert bản ghi mới
-                    let NewBilletInfoData = Resources["InfoTableFunctions"].CreateInfoTableFromDataShape({
-                        infoTableName: "InfoTable",
-                        dataShapeName: "AES.DataShape.Dynamic.PRODUCTION_BILLET_INFO"
-                    });
+        if (importedPODetailData && importedPODetailData.toString().length > 0) {
+            let i = 0; //index cho đơn hàng
+            let lastestID = me.Get_Pr_Key({
+                tableName: me.TableName /* STRING */
+            });
 
-                    let WOData = me.LoadingData({
-                        strQuery: "select WO.PR_KEY as PR_KEY, WOB.MATERIAL_ID as MATERIAL_ID, WOB.QUANTITY_2 as QUANTITY_2 from WORK_ORDERS WO join WORK_ORDER_BOM WOB on WOB.FR_KEY = WO.PR_KEY and WOB.BOM_TYPE = 'MATL' where WO.WORK_ORDER_CODE = '" + runningWO.rows[0].WORK_ORDER_CODE + "' and WOB.LOT_NUMBER = '" + tagData.substring(16, 30).replace(/\s/g, "") + "'"
-                    });
+            importedPODetailData.forEach(row => {
+                if (Object.keys(row).length !== 0) {
+                    let POIDData;
+                    let ImportedPOData = Things["CTA.Business.Product.PO.PurchaseOrder"].AllImportedDataForAging;
 
-                    let quantityTagName = "X1_4M1_A1P" + (i + 15).toString().padStart(2, "0");
-                    let quantityTagData = me[quantityTagName];
-                    let lengthTagName = "X1_4M1_A1P" + (26 + zz).toString().padStart(2, "0");
-                    let lengthTagData = me[lengthTagName];
-
-
-                    let newEntryData = {
-                        WORK_ORDER_ID: WOData.getRowCount() > 0 ? WOData.rows[0].PR_KEY : -1, // NUMBER
-                        WORK_LINE_ID: "Line_04", // STRING
-                        WORK_SHIFT_ID: WorkShiftData.rows[0].SHIFT, // INTEGER
-                        MATERIAL_ID: WOData.getRowCount() > 0 ? WOData.rows[0].MATERIAL_ID : -1, // INTEGER
-                        MATERIAL_LOT_NUMBER: tagData.substring(16, 30).replace(/\s/g, ""), // STRING
-                        TOTAL_BILLETS_ON_RACK: quantityTagData, // INTEGER
-                        NUMBER_BILLET_TREE_INPUT: zz + 1, // INTEGER
-                        INPUT_DATE: date, // DATETIME
-                        BILLET_TREE_INPUT_LENGTH: me[lengthTagData], // NUMBER
-                        BILLET_TREE_STATUS: 'S', // STRING
-                        PART_OF_BILLET_LENGTH: WOData.getRowCount() > 0 ? WOData.rows[0].QUANTITY_2 : 0, // NUMBER
-                        TOTAL_DEFECTS_OF_BILLET: 0, // NUMBER
-                        TO_WORK_ORDER_ID: -1, // NUMBER
-                        CREATED_DATE: date, // DATETIME
-                        CREATED_BY: Resources["CurrentSessionInfo"].GetCurrentUser(), // STRING
-                        UPDATED_DATE: date, // DATETIME
-                        UPDATED_BY: Resources["CurrentSessionInfo"].GetCurrentUser() // STRING
+                    let paramsForCheckPOKey = {
+                        fieldName: "PURCHASE_ORDER_CODE" /* STRING */,
+                        isCaseSensitive: false /* BOOLEAN {"defaultValue":false} */,
+                        t: ImportedPOData /* INFOTABLE */,
+                        value: row.PURCHASE_ORDER_CODE.toString().trim() /* STRING */
                     };
-                    NewBilletInfoData.AddRow(newEntryData);
-                    Things["CTA.Business.Production.Production_Billet_Info"].SetExecuteDataUpdate({
-                        User: Resources["CurrentSessionInfo"].GetCurrentUser() /* STRING */,
-                        Length: me.X1_4M1_A3SE0 /* NUMBER */,
-                        Data: NewBilletInfoData /* INFOTABLE {"dataShape":"AES.DataShape.Dynamic.PRODUCTION_BILLET_INFO"} */,
-                        Flag: "ADD" /* STRING */,
-                        Date: date /* DATETIME */
-                    });
-                } else { //nếu có rồi, check trùng
-                    for (let zzz = 0; zzz < checkData.getRowCount(); zzz++) {
-                        if (zzz == 0) { //update dữ liệu của bản ghi đầu tiên
-                            if (checkData.rows[0].BILLET_TREE_INPUT_LENGTH == 0 || checkData.rows[0].BILLET_TREE_STATUS != 'S') {
-                                let lengthTagName = "X1_4M1_A1P" + (26 + checkData.rows[0].NUMBER_BILLET_TREE_INPUT - 1);
-                                checkData.rows[0].BILLET_TREE_INPUT_LENGTH = me[lengthTagName];
-                                checkData.rows[0].BILLET_TREE_STATUS = 'S';
-                                UpdatingBilletInfoData.AddRow(checkData.rows[0]);
-                            }
-                        } else { // xóa các bản ghi thừa
-                            let DeletingBilletInfoData = Resources["InfoTableFunctions"].CreateInfoTableFromDataShape({
-                                infoTableName: "InfoTable",
-                                dataShapeName: "AES.DataShape.Dynamic.PRODUCTION_BILLET_INFO"
-                            });
-                            DeletingBilletInfoData.AddRow(checkData.rows[zzz]);
 
-                            Things["CTA.Business.Production.Production_Billet_Info"].SetExecuteDataUpdate({
-                                User: Resources["CurrentSessionInfo"].GetCurrentUser() /* STRING */,
-                                Length: me.X1_4M1_A3SE0 /* NUMBER */,
-                                Data: DeletingBilletInfoData /* INFOTABLE {"dataShape":"AES.DataShape.Dynamic.PRODUCTION_BILLET_INFO"} */,
-                                Flag: "DEL" /* STRING */,
-                                Date: date /* DATETIME */
+                    let checkPOResult = Resources["InfoTableFunctions"].EQFilter(paramsForCheckPOKey);
+                    if (checkPOResult.getRowCount() > 0) {
+                        POIDData = checkPOResult.rows[0].PR_KEY
+                    } else {
+                        throw ("Không tìm thấy số YC " + row.PURCHASE_ORDER_CODE + " trong sheet Thông tin PO. Kiểm tra lại sheet Chi tiết PO");
+
+                    }
+
+                    // ImportedPOData.rows.forEach(ImportedPODataRow => {
+                    // 	if (ImportedPODataRow.PURCHASE_ORDER_CODE == row.PURCHASE_ORDER_CODE) {
+                    // 		POIDData = ImportedPODataRow.PR_KEY;
+                    // 	}
+                    // });
+
+                    // if (!POIDData) {
+                    // 	throw ("Không tìm thấy số YC " + row.PURCHASE_ORDER_CODE + " trong sheet Thông tin PO. Kiểm tra lại sheet Chi tiết PO");
+                    // }
+
+
+                    let ProductID;
+                    let ProductDataString = row.PO_DETAILS_PROD_CODE.replace(/\s/g, "").split("-")[1];
+                    let ProductData = Things["CTA.Business.Categories.MD_PRODUCT"].FilterImportingData({
+                        fieldName: "PRODUCT_CODE" /* STRING [Required] */,
+                        valueField: ProductDataString /* STRING */
+                    });
+                    if (ProductData.getRowCount() > 0) {
+                        ProductID = ProductData.rows[0].PRODUCT_ID;
+                    } else {
+                        throw ("Không tìm thấy thông tin sản phẩm " + ProductDataString + " !");
+                    }
+
+                    let ColorID;
+                    let ColorDataArray = row.PO_DETAILS_PROD_CODE.replace(/\s/g, "").split("-");
+                    if (row.COLOR_ID && row.COLOR_ID.toString().trim().length > 0) {
+                        let ColorData = Things["CTA.Business.Categories.Md_Colors"].FilterImportingData({
+                            fieldName: "COLOR_CODE" /* STRING [Required] */,
+                            valueField: row.COLOR_ID.toString().trim() /* STRING */
+                        });
+                        if (ColorData.getRowCount() > 0) {
+                            ColorID = ColorData.rows[0].COLOR_ID;
+                        } else {
+                            throw ("Lỗi filter color data 1");
+                        }
+                    } else {
+                        let ColorData = Things["CTA.Business.Categories.Md_Colors"].FilterImportingData({
+                            fieldName: "COLOR_CODE" /* STRING [Required] */,
+                            valueField: "None" /* STRING */
+                        });
+                        if (ColorData.getRowCount() > 0) {
+                            ColorID = ColorData.rows[0].COLOR_ID;
+                        } else {
+                            throw ("Lỗi filter color data 2");
+                        }
+                    }
+                    if (!ColorID) {
+                        throw ("Không tìm thấy mã màu");
+                    }
+
+                    let PRODUCT_SIZE;
+                    let PRODUCT_SIZE_DataArray = row.PO_DETAILS_PROD_CODE.replace(/\s/g, "").split("-");
+                    if (!parseFloat(PRODUCT_SIZE_DataArray[2])) {
+                        throw ("Dữ liệu Kích thước sản phẩm trong Code sản phẩm " + row.PO_DETAILS_PROD_CODE.replace(/\s/g, "") + " sai định dạng (" + PRODUCT_SIZE_DataArray[2] + ")");
+                    } else {
+                        let checkMinMaxData = me.LoadingData({
+                            strQuery: "select * from SYS_SYSTEMVAR where VAR_GROUP = 'PO_DETAILS'"
+                        })
+
+                        let PRODUCT_SIZE_MIN = 1;
+                        let PRODUCT_SIZE_MAX = 100.1;
+                        checkMinMaxData.rows.forEach(minMaxValue => {
+                            switch (minMaxValue.VAR_NAME) {
+                                case 'PRODUCT_SIZE_MIN':
+                                    PRODUCT_SIZE_MIN = minMaxValue.VAR_VALUE;
+                                    break;
+                                case 'PRODUCT_SIZE_MAX':
+                                    PRODUCT_SIZE_MAX = minMaxValue.VAR_VALUE;
+                                    break;
+                            }
+                        })
+                        PRODUCT_SIZE = parseFloat(PRODUCT_SIZE_DataArray[2]) * 1000;
+                        if (PRODUCT_SIZE < PRODUCT_SIZE_MIN) {
+                            throw ("Dữ liệu Kích thước sản phẩm trong Code sản phẩm " + row.PO_DETAILS_PROD_CODE.replace(/\s/g, "") + " có Kích thước nhỏ hơn quy định (" + (PRODUCT_SIZE_MIN / 1000) + "m)");
+                        }
+                        if (PRODUCT_SIZE > PRODUCT_SIZE_MAX) {
+                            throw ("Dữ liệu Kích thước sản phẩm trong Code sản phẩm " + row.PO_DETAILS_PROD_CODE.replace(/\s/g, "") + " có Kích thước lớn hơn quy định (" + PRODUCT_SIZE_MAX / 1000 + "m)");
+                        }
+                    }
+
+                    let AlloyID = 10;
+                    let checkPOData = me.LoadingData({
+                        strQuery: "select * from PURCHASE_ORDER where PURCHASE_ORDER_CODE = '" + row.PURCHASE_ORDER_CODE + "'"
+                    });
+                    if (checkPOData.getRowCount() > 0) {
+                        let checkPODetailData = me.LoadingData({
+                            strQuery: "select * from PURCHASE_ORDER_DETAILS where FR_KEY = " + checkPOData.rows[0].PR_KEY
+                        });
+                        if (checkPODetailData.getRowCount() > 0) {
+                            AlloyID = checkPODetailData.rows[0].ALLOYS_ID;
+                        }
+                    }
+
+                    let newEntry = {
+                        PR_KEY: lastestID.rows[0].PR_KEY + i,
+                        FR_KEY: POIDData,
+                        PRODUCT_ID: ProductID ? ProductID : null,
+                        PO_DETAILS_PROD_CODE: row.PO_DETAILS_PROD_CODE,
+                        COLOR_ID: ColorID ? ColorID : null,
+                        ALLOYS_ID: AlloyID ? AlloyID : null,
+                        UNIT_ID: ProductData.rows[0].UNIT_ID,
+                        QUANTITY: row.QUANTITY_INCOME,
+                        PRODUCT_SIZE: PRODUCT_SIZE,
+                        PRODUCT_PROPORTION: 0.1,
+                        PRIORITY: 0,
+                        IS_ACTIVE: 1,
+                        CREATED_DATE: convertDateString(currentDatetimeToString),
+                        CREATED_BY: Resources["CurrentSessionInfo"].GetCurrentUser(),
+                        UPDATED_DATE: convertDateString(currentDatetimeToString),
+                        UPDATED_BY: Resources["CurrentSessionInfo"].GetCurrentUser(),
+                    };
+                    let checkPODetailDataExist = me.LoadingData({
+                        strQuery: "select * from PURCHASE_ORDER_DETAILS where fr_key = " + POIDData + " and PO_DETAILS_PROD_CODE = '" + row.PO_DETAILS_PROD_CODE + "'" /* STRING [Required] */
+                    });
+                    if (checkPODetailDataExist.getRowCount() == 0) {
+                        let checkExistedData = false;
+                        NewPODetailData.rows.forEach(NewDataRow => {
+                            if (NewDataRow.FR_KEY == newEntry.FR_KEY && NewDataRow.PO_DETAILS_PROD_CODE == newEntry.PO_DETAILS_PROD_CODE) {
+                                checkExistedData = true;
+                            }
+                        });
+                        if (!checkExistedData) {
+                            NewPODetailData.AddRow(newEntry);
+                            i++;
+                        }
+                    } else if (checkPODetailDataExist.getRowCount() > 0) {
+                        //check số giá
+                        let checkWO = me.LoadingData({
+                            strQuery: "select * from WORK_ORDERS where FR_KEY = " + checkPODetailDataExist.rows[0].PR_KEY
+                        });
+                        if (checkWO.getRowCount() > 0) {
+                            checkWO.rows.forEach(WO_row => {
+                                let checkProductionMasterDetail = me.LoadingData({
+                                    strQuery: "select * from PRODUCTION_MASTER_DETAIL where WORK_ORDER_ID = " + WO_row.PR_KEY + " and PRODUCT_LOT_NUMBER = '" + row.LOT_NUMBER + "' and PALLET_ID = '" + row.PALLET_ID + "'"
+                                });
+                                if (checkProductionMasterDetail.getRowCount() > 0) {
+                                    throw ("Lot sản phẩm " + row.LOT_NUMBER + " với số giá " + row.PALLET_ID + " đã có trong đơn hàng " + row.PURCHASE_ORDER_CODE + ", được dùng cho Code sản phẩm " + row.PO_DETAILS_PROD_CODE + "!");
+                                }
                             });
                         }
+
+                        UpdatingPODetailData.AddRow(checkPODetailDataExist.rows[0]);
+                    } else {
+                        throw ("Lỗi. Kiểm tra lại file!");
                     }
                 }
+            });
+        }
+    }
+
+    // for (let i = UpdatingPODetailData.rows.length - 1; i > 0; i--) {
+    // 	if (UpdatingPODetailData.rows[i].PR_KEY == UpdatingPODetailData.rows[i - 1].PR_KEY) {
+    // 		UpdatingPODetailData.RemoveRow(i);
+    // 	}
+    // }
+    // for (let i = NewPODetailData.rows.length - 1; i > 0; i--) {
+    // 	if (NewPODetailData.rows[i].PR_KEY == NewPODetailData.rows[i - 1].PR_KEY) {
+    // 		NewPODetailData.RemoveRow(i);
+    // 	}
+    // }
+
+    if (isDataForAging) {
+        function checkDuplicateCode(data, sheetName, keyName) {
+            try {
+                let purchaseOrders = data[sheetName];
+
+                const codes = [];
+                for (let i = 0; i < purchaseOrders.toString().length; i++) {
+                    let code = purchaseOrders[i][keyName];
+                    if (code && codes.indexOf(code) !== -1) {
+                        return {
+                            isExisted: true,
+                            LotNumber: code,
+                        };
+                    }
+                    codes.push(code);
+                }
+                return {
+                    isExisted: false,
+                };
+            } catch (error) {
+                return {
+                    isExisted: false,
+                };
             }
-        } else { //nếu chưa có dữ liệu, insert dữ liệu
-            let NewBilletInfoData = Resources["InfoTableFunctions"].CreateInfoTableFromDataShape({
-                infoTableName: "InfoTable",
-                dataShapeName: "AES.DataShape.Dynamic.PRODUCTION_BILLET_INFO"
-            });
-            // AES.DataShape.Dynamic.PRODUCTION_BILLET_INFO entry object
-            let WOData = me.LoadingData({
-                strQuery: "select WO.PR_KEY as PR_KEY, WOB.MATERIAL_ID as MATERIAL_ID, WOB.QUANTITY_2 as QUANTITY_2 from WORK_ORDERS WO join WORK_ORDER_BOM WOB on WOB.FR_KEY = WO.PR_KEY and WOB.BOM_TYPE = 'MATL' where WO.WORK_ORDER_CODE = '" + runningWO.rows[0].WORK_ORDER_CODE + "' and WOB.LOT_NUMBER = '" + tagData.substring(16, 30).replace(/\s/g, "") + "'"
-            });
+        }
+        // if (checkDuplicateCode(importedJsonData, "CTA_Paint", "LOT_NUMBER").isExisted) {
+        // 	throw ("Sheet CTA_Paint có Lot sản phẩm " + checkDuplicateCode(importedJsonData, "CTA_Paint", "LOT_NUMBER").LotNumber + " trùng lặp!");
+        // }
 
-            let quantityTagName = "X1_4M1_A1P" + (i + 15).toString().padStart(2, "0");
-            let quantityTagData = me[quantityTagName];
+        let DSHoaGiaJsonData = importedJsonData["CTA_Paint"];
 
-            let newEntryData = {
-                WORK_ORDER_ID: WOData.getRowCount() > 0 ? WOData.rows[0].PR_KEY : -1, // NUMBER
-                WORK_LINE_ID: "Line_04", // STRING
-                WORK_SHIFT_ID: WorkShiftData.rows[0].SHIFT, // INTEGER
-                MATERIAL_ID: WOData.getRowCount() > 0 ? WOData.rows[0].MATERIAL_ID : -1, // INTEGER
-                MATERIAL_LOT_NUMBER: tagData.substring(16, 30).replace(/\s/g, ""), // STRING
-                TOTAL_BILLETS_ON_RACK: quantityTagData, // INTEGER
-                NUMBER_BILLET_TREE_INPUT: 1, // INTEGER
-                INPUT_DATE: date, // DATETIME
-                BILLET_TREE_INPUT_LENGTH: me.X1_4M1_A1P26, // NUMBER
-                BILLET_TREE_STATUS: 'S', // STRING
-                PART_OF_BILLET_LENGTH: WOData.getRowCount() > 0 ? WOData.rows[0].QUANTITY_2 : 0, // NUMBER
-                TOTAL_DEFECTS_OF_BILLET: 0, // NUMBER
-                TO_WORK_ORDER_ID: -1, // NUMBER
-                CREATED_DATE: date, // DATETIME
-                CREATED_BY: Resources["CurrentSessionInfo"].GetCurrentUser(), // STRING
-                UPDATED_DATE: date, // DATETIME
-                UPDATED_BY: Resources["CurrentSessionInfo"].GetCurrentUser() // STRING
-            };
-            NewBilletInfoData.AddRow(newEntryData);
-            Things["CTA.Business.Production.Production_Billet_Info"].SetExecuteDataUpdate({
-                User: Resources["CurrentSessionInfo"].GetCurrentUser() /* STRING */,
-                Length: me.X1_4M1_A3SE0 /* NUMBER */,
-                Data: NewBilletInfoData /* INFOTABLE {"dataShape":"AES.DataShape.Dynamic.PRODUCTION_BILLET_INFO"} */,
-                Flag: "ADD" /* STRING */,
-                Date: date /* DATETIME */
-            });
+        let j = 0; //index cho work order nếu import từ màn chờ hóa già
+        // let lastestIDForWorkOrder = me.Get_Pr_Key({
+        //     tableName: "WORK_ORDERS" /* STRING */
+        // });
 
-            //dữ liệu trong bảng production_master
-            for (let zz = 0; zz < quantityTagData; zz++) {
-                LengthUsed += me["X1_4M1_A1P" + (26 + zz).toString().padStart(2, "0")];
-                let checkData = me.LoadingData({ // lấy dữ liệu dựa theo lot và thứ tự từng thanh
-                    strQuery: "select * from PRODUCTION_BILLET_INFO where MATERIAL_LOT_NUMBER = '" + tagData.substring(16, 30).replace(/\s/g, "") + "' and NUMBER_BILLET_TREE_INPUT = " + (zz + 1)
+        let lastestIDForProductionMasterDetail_index = 0;
+        let lastestIDForProductionMasterDetail = me.Get_Pr_Key({
+            tableName: "PRODUCTION_MASTER_DETAIL" /* STRING */
+        });
+        for (let i = 0; i < DSHoaGiaJsonData.length; i++) {
+            if (Object.keys(DSHoaGiaJsonData[i]).toString().length !== 0) {
+                let checkLotNumberData = me.LoadingData({
+                    strQuery: "select * from WHM_PRODUCT_MASTER where LOT_NUMBER = '" + DSHoaGiaJsonData[i].LOT_NUMBER.toString().trim() + "' and PALLET_ID = '" + DSHoaGiaJsonData[i].PALLET_ID.toString().trim() + "'",
                 });
-                if (checkData.getRowCount() == 0) { //nếu chưa lưu bản ghi này > insert bản ghi mới
-                    let NewBilletInfoData = Resources["InfoTableFunctions"].CreateInfoTableFromDataShape({
-                        infoTableName: "InfoTable",
-                        dataShapeName: "AES.DataShape.Dynamic.PRODUCTION_BILLET_INFO"
+                if (checkLotNumberData.getRowCount() > 0) {
+                    throw ("Lot sản phẩm " + DSHoaGiaJsonData[i].LOT_NUMBER + " với số giá " + DSHoaGiaJsonData[i].PALLET_ID + " đã tồn tại!");
+                }
+
+                let paramsForCheckingDuplicatedData = {
+                    fieldName: "LOT_NUMBER" /* STRING */,
+                    isCaseSensitive: false /* BOOLEAN {"defaultValue":false} */,
+                    t: DataForImporting_WHM_PRODUCT_MASTER /* INFOTABLE */,
+                    value: DSHoaGiaJsonData[i].LOT_NUMBER.toString().trim() /* STRING */
+                };
+                let checkingResult = Resources["InfoTableFunctions"].EQFilter(paramsForCheckingDuplicatedData);
+
+                if (checkingResult.getRowCount() > 0) {
+                    if (checkingResult.rows[0].PALLET_ID == DSHoaGiaJsonData[i].PALLET_ID.toString().trim()) {
+                        throw ("Số giá " + DSHoaGiaJsonData[i].PALLET_ID + " với Lot sản phẩm " + DSHoaGiaJsonData[i].LOT_NUMBER + " bị trùng lặp");
+                    }
+                }
+
+                let WorkOrderFRKEY;
+                let WorkOrderColorID;
+                let ProductID;
+                let UnitID;
+                let checkPOExist = me.LoadingData({
+                    strQuery: "select PR_KEY from PURCHASE_ORDER where PURCHASE_ORDER_CODE = '" + DSHoaGiaJsonData[i].PURCHASE_ORDER_CODE + "'" /* STRING [Required] */
+                });
+                if (checkPOExist.getRowCount() > 0) {
+                    let checkPODetailDataExist = me.LoadingData({
+                        strQuery: "select * from PURCHASE_ORDER_DETAILS where fr_key = " + checkPOExist.rows[0].PR_KEY + " and PO_DETAILS_PROD_CODE = '" + DSHoaGiaJsonData[i].PO_DETAILS_PROD_CODE + "'" /* STRING [Required] */
                     });
-
-                    let WOData = me.LoadingData({
-                        strQuery: "select WO.PR_KEY as PR_KEY, WOB.MATERIAL_ID as MATERIAL_ID, WOB.QUANTITY_2 as QUANTITY_2 from WORK_ORDERS WO join WORK_ORDER_BOM WOB on WOB.FR_KEY = WO.PR_KEY and WOB.BOM_TYPE = 'MATL' where WO.WORK_ORDER_CODE = '" + runningWO.rows[0].WORK_ORDER_CODE + "' and WOB.LOT_NUMBER = '" + tagData.substring(16, 30).replace(/\s/g, "") + "'"
-                    });
-
-                    let quantityTagName = "X1_4M1_A1P" + (i + 15).toString().padStart(2, "0");
-                    let quantityTagData = me[quantityTagName];
-                    let lengthTagName = "X1_4M1_A1P" + (26 + zz).toString().padStart(2, "0");
-                    let lengthTagData = me[lengthTagName];
-
-
-                    let newEntryData = {
-                        WORK_ORDER_ID: WOData.getRowCount() > 0 ? WOData.rows[0].PR_KEY : -1, // NUMBER
-                        WORK_LINE_ID: "Line_04", // STRING
-                        WORK_SHIFT_ID: WorkShiftData.rows[0].SHIFT, // INTEGER
-                        MATERIAL_ID: WOData.getRowCount() > 0 ? WOData.rows[0].MATERIAL_ID : -1, // INTEGER
-                        MATERIAL_LOT_NUMBER: tagData.substring(16, 30).replace(/\s/g, ""), // STRING
-                        TOTAL_BILLETS_ON_RACK: quantityTagData, // INTEGER
-                        NUMBER_BILLET_TREE_INPUT: zz + 1, // INTEGER
-                        INPUT_DATE: date, // DATETIME
-                        BILLET_TREE_INPUT_LENGTH: me[lengthTagData], // NUMBER
-                        BILLET_TREE_STATUS: 'S', // STRING
-                        PART_OF_BILLET_LENGTH: WOData.getRowCount() > 0 ? WOData.rows[0].QUANTITY_2 : 0, // NUMBER
-                        TOTAL_DEFECTS_OF_BILLET: 0, // NUMBER
-                        TO_WORK_ORDER_ID: -1, // NUMBER
-                        CREATED_DATE: date, // DATETIME
-                        CREATED_BY: Resources["CurrentSessionInfo"].GetCurrentUser(), // STRING
-                        UPDATED_DATE: date, // DATETIME
-                        UPDATED_BY: Resources["CurrentSessionInfo"].GetCurrentUser() // STRING
-                    };
-                    NewBilletInfoData.AddRow(newEntryData);
-                    Things["CTA.Business.Production.Production_Billet_Info"].SetExecuteDataUpdate({
-                        User: Resources["CurrentSessionInfo"].GetCurrentUser() /* STRING */,
-                        Length: me.X1_4M1_A3SE0 /* NUMBER */,
-                        Data: NewBilletInfoData /* INFOTABLE {"dataShape":"AES.DataShape.Dynamic.PRODUCTION_BILLET_INFO"} */,
-                        Flag: "ADD" /* STRING */,
-                        Date: date /* DATETIME */
-                    });
-                } else { //nếu có rồi, check trùng
-                    for (let zzz = 0; zzz < checkData.getRowCount(); zzz++) {
-                        if (zzz == 0) { //update dữ liệu của bản ghi đầu tiên
-                            if (checkData.rows[0].BILLET_TREE_INPUT_LENGTH == 0 || checkData.rows[0].BILLET_TREE_STATUS != 'S') {
-                                let lengthTagName = "X1_4M1_A1P" + (26 + checkData.rows[0].NUMBER_BILLET_TREE_INPUT - 1);
-                                checkData.rows[0].BILLET_TREE_INPUT_LENGTH = me[lengthTagName];
-                                checkData.rows[0].BILLET_TREE_STATUS = 'S';
-                                UpdatingBilletInfoData.AddRow(checkData.rows[0]);
+                    if (checkPODetailDataExist.getRowCount() > 0) {
+                        UpdatingPODetailData.rows.forEach(UpdatingPODetailDataRow => {
+                            if (UpdatingPODetailDataRow.PO_DETAILS_PROD_CODE.toString().trim() == DSHoaGiaJsonData[i].PO_DETAILS_PROD_CODE.toString().trim()) {
+                                Things["CTA.Business.Product.PO.PurchaseOrder"].AllImportedDataForAging.rows.forEach(POAllImportedDataRow => {
+                                    if (UpdatingPODetailDataRow.FR_KEY == POAllImportedDataRow.PR_KEY && DSHoaGiaJsonData[i].PURCHASE_ORDER_CODE.toString().trim() == POAllImportedDataRow.PURCHASE_ORDER_CODE.toString().trim()) {
+                                        WorkOrderFRKEY = UpdatingPODetailDataRow.PR_KEY;
+                                        WorkOrderColorID = UpdatingPODetailDataRow.COLOR_ID;
+                                        ProductID = UpdatingPODetailDataRow.PRODUCT_ID;
+                                        UnitID = UpdatingPODetailDataRow.UNIT_ID;
+                                    }
+                                });
                             }
-                        } else { // xóa các bản ghi thừa
-                            let DeletingBilletInfoData = Resources["InfoTableFunctions"].CreateInfoTableFromDataShape({
-                                infoTableName: "InfoTable",
-                                dataShapeName: "AES.DataShape.Dynamic.PRODUCTION_BILLET_INFO"
-                            });
-                            DeletingBilletInfoData.AddRow(checkData.rows[zzz]);
-
-                            Things["CTA.Business.Production.Production_Billet_Info"].SetExecuteDataUpdate({
-                                User: Resources["CurrentSessionInfo"].GetCurrentUser() /* STRING */,
-                                Length: me.X1_4M1_A3SE0 /* NUMBER */,
-                                Data: DeletingBilletInfoData /* INFOTABLE {"dataShape":"AES.DataShape.Dynamic.PRODUCTION_BILLET_INFO"} */,
-                                Flag: "DEL" /* STRING */,
-                                Date: date /* DATETIME */
+                        });
+                    } else {
+                        NewPODetailData.rows.forEach(NewImportedDataRow => {
+                            if (NewImportedDataRow.PO_DETAILS_PROD_CODE.toString().trim() == DSHoaGiaJsonData[i].PO_DETAILS_PROD_CODE.toString().trim()) {
+                                Things["CTA.Business.Product.PO.PurchaseOrder"].AllImportedDataForAging.rows.forEach(POAllImportedDataRow => {
+                                    if (NewImportedDataRow.FR_KEY == POAllImportedDataRow.PR_KEY && DSHoaGiaJsonData[i].PURCHASE_ORDER_CODE.toString().trim() == POAllImportedDataRow.PURCHASE_ORDER_CODE.toString().trim()) {
+                                        WorkOrderFRKEY = NewImportedDataRow.PR_KEY;
+                                        WorkOrderColorID = NewImportedDataRow.COLOR_ID;
+                                        ProductID = NewImportedDataRow.PRODUCT_ID;
+                                        UnitID = NewImportedDataRow.UNIT_ID;
+                                    }
+                                });
+                            }
+                        });
+                    }
+                } else {
+                    NewPODetailData.rows.forEach(NewImportedDataRow => {
+                        if (NewImportedDataRow.PO_DETAILS_PROD_CODE.toString().trim() == DSHoaGiaJsonData[i].PO_DETAILS_PROD_CODE.toString().trim()) {
+                            Things["CTA.Business.Product.PO.PurchaseOrder"].AllImportedDataForAging.rows.forEach(POAllImportedDataRow => {
+                                if (NewImportedDataRow.FR_KEY == POAllImportedDataRow.PR_KEY && DSHoaGiaJsonData[i].PURCHASE_ORDER_CODE.toString().trim() == POAllImportedDataRow.PURCHASE_ORDER_CODE.toString().trim()) {
+                                    WorkOrderFRKEY = NewImportedDataRow.PR_KEY;
+                                    WorkOrderColorID = NewImportedDataRow.COLOR_ID;
+                                    ProductID = NewImportedDataRow.PRODUCT_ID;
+                                    UnitID = NewImportedDataRow.UNIT_ID;
+                                }
                             });
                         }
+                    });
+                }
+
+                if (!WorkOrderColorID) {
+                    throw ("Kiểm tra lại Code sản phẩm trong Sheet CTA_Paint!");
+                }
+
+                let newEntryForWorkOrder = {
+                    // PR_KEY: lastestIDForWorkOrder.rows[0].PR_KEY + j, // STRING [Primary Key]
+                    // WORK_ORDER_CODE: "LSX_" + parseInt(lastestIDForWorkOrder.rows[0].PR_KEY) + j, // STRING
+                    WORK_LINE_ID: '-1', // STRING
+                    STATUS: '5', // STRING
+                    QUANTITY_PLAN: DSHoaGiaJsonData[i].QUANTITY_INCOME, // NUMBER
+                    QUANTITY_ACTUAL: DSHoaGiaJsonData[i].QUANTITY_INCOME, // NUMBER
+                    START_DATE_PLAN: convertDateString(currentDatetimeToString), // DATETIME
+                    END_DATE_PLAN: convertDateString(currentDatetimeToString), // DATETIME
+                    START_DATE_ACTUAL: convertDateString(currentDatetimeToString), // DATETIME
+                    END_DATE_ACTUAL: convertDateString(currentDatetimeToString), // DATETIME
+                    ACTIVE: 1, // BOOLEAN
+                    CREATED_DATE: convertDateString(currentDatetimeToString),
+                    CREATED_BY: Resources["CurrentSessionInfo"].GetCurrentUser(),
+                    UPDATED_DATE: convertDateString(currentDatetimeToString),
+                    UPDATED_BY: Resources["CurrentSessionInfo"].GetCurrentUser(),
+                    FR_KEY: WorkOrderFRKEY, // NUMBER
+                    WORK_ORDER_TYPE: "W_DEP", // STRING
+                    COLOR_ID: WorkOrderColorID, // NUMBER
+                    DESCRIPTION: "Lệnh sản xuất được tạo tự động từ chức năng import Danh sách chờ hóa già" // STRING
+                };
+
+
+                let newEntryForImportHG = {
+                    PALLET_ID: DSHoaGiaJsonData[i].PALLET_ID, // STRING
+                    PRODUCT_CODE: DSHoaGiaJsonData[i].PO_DETAILS_PROD_CODE, // STRING
+                    PRODUCT_LOT_NUMBER: DSHoaGiaJsonData[i].LOT_NUMBER, // STRING
+                    WORK_ORDER_CODE: DSHoaGiaJsonData[i].PURCHASE_ORDER_CODE, // STRING
+                    TOTAL_ALUMINUM_BAR: DSHoaGiaJsonData[i].QUANTITY_INCOME,
+                };
+
+                let PO_Code_Data_Splited = DSHoaGiaJsonData[i].PO_DETAILS_PROD_CODE.split("-");
+                let newEntryForImportingHG = {
+                    PR_KEY: lastestIDForProductionMasterDetail.rows[0].PR_KEY + lastestIDForProductionMasterDetail_index, // NUMBER [Primary Key]
+                    // WORK_ORDER_ID: newEntryForWorkOrder.PR_KEY, // NUMBER
+                    WORK_ORDER_ID: -1, // NUMBER
+                    WORK_LINE_ID: "-1", // STRING
+                    WORK_SHIFT_ID: -1, // INTEGER
+                    STAGE_TYPE: "ST", // STRING
+                    PRODUCT_LOT_NUMBER: DSHoaGiaJsonData[i].LOT_NUMBER, // STRING
+                    PALLET_ID: DSHoaGiaJsonData[i].PALLET_ID, // STRING
+                    STATUS: "110", // STRING
+                    ALUMINUM_BAR_LENGTH: parseFloat(PO_Code_Data_Splited[2]) ? parseFloat(PO_Code_Data_Splited[2]) * 1000 : 0, // NUMBER
+                    TOTAL_ALUMINUM_BAR: DSHoaGiaJsonData[i].QUANTITY_INCOME, // INTEGER
+                    TOTAL_ALUMINUM_BAR_DEFECT: 0, // INTEGER
+                    TOTAL_WEIGHT_OF_ALUMINUM_DEFECTS: 0, // NUMBER
+                    TOTAL_WEIGHT_OF_BILLET_DEFECTS: 0, // NUMBER
+                    START_TIME: convertDateString(yesterdayDatetimeToString), // DATETIME
+                    END_TIME: convertDateString(yesterdayDatetimeToString), // DATETIME
+                    ACTUAL_WEIGHT: DSHoaGiaJsonData[i].ACTUAL_WEIGHT, // NUMBER
+                    WORK_ORDER_DETAIL_ID: -1, // NUMBER
+                };
+
+                // let newEntryFor_PRODUCTION_MASTER = {
+                //     WORK_LINE_ID: "-1", // STRING
+                //     WORK_SHIFT_ID: -1, // INTEGER
+                //     MATERIAL_ID: -1, // INTEGER
+                //     WORK_ORDER_ID: newEntryForWorkOrder.PR_KEY, // NUMBER
+                //     //WORK_ORDER_ID: "-1",
+                //     MATERIAL_LOT_NUMBER: ' ', // STRING
+                //     TOTAL_BILLETS_ON_RACK: 0, // INTEGER
+                //     NUMBER_BILLET_TREE_CUT: 0, // INTEGER
+                //     CUT_TIME: convertDateString(currentDatetimeToString), // DATETIME
+                //     PART_NUMBER_OF_BILLET: 0, // INTEGER
+                //     PART_NUMBER_OF_BILLET_STATUS: 0, // STRING
+                //     PART_OF_BILLET_LENGTH_ACT: 0, // NUMBER
+                //     TO_WORK_ORDER_ID: -1, // NUMBER
+                //     MOLD_ID: -1, // INTEGER
+                //     PRODUCT_LOT_NUMBER: DSHoaGiaJsonData[i].LOT_NUMBER, // STRING
+                //     START_EXTRUSIONS: convertDateString(currentDatetimeToString), // DATETIME
+                //     END_EXTRUSIONS: convertDateString(currentDatetimeToString), // DATETIME
+                //     ALUMINUM_BAR_LENGTH: -1, // NUMBER
+                //     TOTAL_ALUMINUM_BAR: DSHoaGiaJsonData[i].QUANTITY_INCOME, // INTEGER
+                //     TOTAL_DEFECT_OF_ALUMINUM_BAR: 0, // INTEGER
+                //     SUB_ALUMINUM_BAR_LENGTH_ACT: 0, // NUMBER
+                //     TOTAL_NUMBER_OF_CUT: 1, // INTEGER
+                //     TOTAL_NUMBER_OF_SUB_ALUM_BAR: 0, // INTEGER
+                //     TOTAL_DEFECT_OF_SUB_ALUM_BAR: 0, // INTEGER
+                //     TOTAL_WEIGHT_OF_ALUMINUM_DEFECTS: 0, // NUMBER
+                //     CREATED_DATE: convertDateString(currentDatetimeToString), // DATETIME
+                //     CREATED_BY: Resources["CurrentSessionInfo"].GetCurrentUser(), // STRING
+                //     UPDATED_DATE: convertDateString(currentDatetimeToString), // DATETIME
+                //     UPDATED_BY: Resources["CurrentSessionInfo"].GetCurrentUser() // STRING
+                // };
+
+                let newEntryFor_WHM_PRODUCT_MASTER = {
+                    WAREHOUSE_ID: WarehouseData.rows[0].WAREHOUSE_ID, // STRING
+                    PALLET_ID: DSHoaGiaJsonData[i].PALLET_ID, // STRING
+                    PRODUCT_ID: ProductID, // NUMBER
+                    LOT_NUMBER: DSHoaGiaJsonData[i].LOT_NUMBER, // STRING
+                    QUANTITY_INCOME: DSHoaGiaJsonData[i].QUANTITY_INCOME, // NUMBER
+                    QUANTITY_OUTCOME: 0, // NUMBER
+                    UNIT_ID: UnitID, // INTEGER
+                    ALUMINUM_BAR_LENGTH: parseFloat(PO_Code_Data_Splited[2]) ? parseFloat(PO_Code_Data_Splited[2]) * 1000 : 0, // NUMBER
+                    ACTUAL_WEIGHT: DSHoaGiaJsonData[i].ACTUAL_WEIGHT, // NUMBER
+                    WORK_ORDER_ID: -1, // NUMBER
+                    WORK_ORDER_DETAIL_ID: -1, // NUMBER
+                    CREATED_DATE: convertDateString(currentDatetimeToString), // DATETIME
+                    CREATED_BY: Resources["CurrentSessionInfo"].GetCurrentUser(), // STRING
+                    UPDATED_DATE: convertDateString(currentDatetimeToString), // DATETIME
+                    UPDATED_BY: Resources["CurrentSessionInfo"].GetCurrentUser(), // STRING
+                    STAGE_TYPE: "ST", // STRING
+                    PO_DETAILS_ID: WorkOrderFRKEY
+                };
+
+                let newEntryFor_WHM_PRODUCT_VOUCHER = {
+                    WH_VOUCHER_CODE: " ", // STRING
+                    WAREHOUSE_ID: WarehouseData.rows[0].WAREHOUSE_ID, // STRING
+                    VOUCHER_DATE: convertDateString(currentDatetimeToString), // DATETIME
+                    VOUCHER_TYPE: "IN", // STRING
+                    STAGE_TYPE: "ST", // STRING
+                    EMPLOYEE_ID: -1, // STRING
+                    PALLET_ID: DSHoaGiaJsonData[i].PALLET_ID, // STRING
+                    PRODUCT_ID: ProductID, // NUMBER
+                    LOT_NUMBER: DSHoaGiaJsonData[i].LOT_NUMBER, // STRING
+                    QUANTITY: DSHoaGiaJsonData[i].QUANTITY_INCOME, // NUMBER
+                    ACTUAL_WEIGHT: DSHoaGiaJsonData[i].ACTUAL_WEIGHT, // NUMBER
+                    NOTE: " ", // STRING
+                    ACTIVE: 1, // BOOLEAN
+                    CREATED_DATE: convertDateString(currentDatetimeToString), // DATETIME
+                    CREATED_BY: Resources["CurrentSessionInfo"].GetCurrentUser(), // STRING
+                    UPDATED_DATE: convertDateString(currentDatetimeToString), // DATETIME
+                    UPDATED_BY: Resources["CurrentSessionInfo"].GetCurrentUser() // STRING
+                };
+
+                if (DataForImporting_WHM_PRODUCT_MASTER.getRowCount() > 0) {
+                    let checkExistedAndErrorData = 1;
+                    //1: dữ liệu mới
+                    //2: dữ liệu trùng toàn bộ
+                    //3: dữ liệu trùng lot, pallet, nhưng khác thông tin khác
+                    DataForImporting_WHM_PRODUCT_MASTER.rows.forEach(DataRow => {
+                        if (DataRow.PALLET_ID == DSHoaGiaJsonData[i].PALLET_ID &&
+                            DSHoaGiaJsonData[i].LOT_NUMBER == DataRow.LOT_NUMBER) {
+                            if (DataRow.QUANTITY_INCOME == DSHoaGiaJsonData[i].QUANTITY_INCOME &&
+                                DataRow.ACTUAL_WEIGHT == DSHoaGiaJsonData[i].ACTUAL_WEIGHT &&
+                                DataRow.WORK_ORDER_DETAIL_ID == WorkOrderFRKEY) {
+                                checkExistedAndErrorData = 2;
+                            } else {
+                                checkExistedAndErrorData = 3;
+                            }
+                        }
+                    });
+                    if (checkExistedAndErrorData == 1) {
+                        // WorkOrderDataForAgingImporting.AddRow(newEntryForWorkOrder);
+                        j++;
+                        DataForImportHGToShow.AddRow(newEntryForImportHG);
+                        DataToImportDataInto_PRODUCTION_MASTER_DETAIL.AddRow(newEntryForImportingHG);
+                        lastestIDForProductionMasterDetail_index++;
+                        // DataForImporting_PRODUCTION_MASTER.AddRow(newEntryFor_PRODUCTION_MASTER);
+                        DataForImporting_WHM_PRODUCT_MASTER.AddRow(newEntryFor_WHM_PRODUCT_MASTER);
+                        DataForImporting_WHM_PRODUCT_VOUCHER.AddRow(newEntryFor_WHM_PRODUCT_VOUCHER);
+                    } else if (checkExistedAndErrorData == 3) {
+                        throw ("Số giá " + DSHoaGiaJsonData[i].PALLET_ID + " với Lot sản phẩm " + DSHoaGiaJsonData[i].LOT_NUMBER + " bị trùng lặp");
                     }
+                } else {
+                    // WorkOrderDataForAgingImporting.AddRow(newEntryForWorkOrder);
+                    j++;
+                    DataForImportHGToShow.AddRow(newEntryForImportHG);
+                    DataToImportDataInto_PRODUCTION_MASTER_DETAIL.AddRow(newEntryForImportingHG);
+                    lastestIDForProductionMasterDetail_index++;
+                    // DataForImporting_PRODUCTION_MASTER.AddRow(newEntryFor_PRODUCTION_MASTER);
+                    DataForImporting_WHM_PRODUCT_MASTER.AddRow(newEntryFor_WHM_PRODUCT_MASTER);
+                    DataForImporting_WHM_PRODUCT_VOUCHER.AddRow(newEntryFor_WHM_PRODUCT_VOUCHER);
                 }
             }
         }
     }
 
-    //nếu check đến dữ liệu trên tag cuối cùng: X1_4M1_A1P14
-    if (i == 4) {
-        //nếu có dữ liệu > dùng dữ liệu ở tag này
-        if (tagData.length > 0 && tagData.replace(/\s/g, "").length > 0) {
-            let quantityTagName = "X1_4M1_A1P" + (i + 15).toString().padStart(2, "0");
-            let quantityTagData = me[quantityTagName];
-            setData(quantityTagData);
-
-        } else { // nếu không có dữ liệu, dùng dữ liệu ở tag X1_4M1_A1P13
-            let previousTagName = "X1_4M1_A1P1" + (i - 1);
-            let previousTagData = me[previousTagName];
-            setData(previousTagData);
-            break;
-        }
-    } else { //nếu không phải tag X1_4M1_A1P14
-        //nếu không có dữ liệu, dùng dữ liệu ở tag trước đó
-        if (tagData.length == 0 || tagData.replace(/\s/g, "").length == 0) {
-            let previousTagName = "X1_4M1_A1P1" + (i - 1);
-            let previousTagData = me[previousTagName];
-            setData(previousTagData);
-            break;
-        } //nếu có dữ liệu, bỏ qua, đọc tag tiếp theo
-    }
+    // me.ImportingWorkOrderForAgingImporting = WorkOrderDataForAgingImporting;
+    me.UpdatingImportedData = UpdatingPODetailData;
+    me.NewImportedData = NewPODetailData;
+    me.DataForImportHGToShow = DataForImportHGToShow;
+    me.DataForImportHG = DataToImportDataInto_PRODUCTION_MASTER_DETAIL;
+    // me.DataForImporting_PRODUCTION_MASTER = DataForImporting_PRODUCTION_MASTER;
+    me.DataForImporting_WHM_PRODUCT_MASTER = DataForImporting_WHM_PRODUCT_MASTER;
+    me.DataForImporting_WHM_PRODUCT_VOUCHER = DataForImporting_WHM_PRODUCT_VOUCHER;
+    result = "OK";
+    // result = me.NewImportedData
+} catch (err) {
+    result = err.toString();
 }
-
-if (updatingDataFor_PRODUCTION_BILLET_MASTER.getRowCount() > 0) {
-    Things["CTA.Business.Categories.PRODUCTION_BILLET_MASTER"].SetExecuteData({
-        Data: updatingDataFor_PRODUCTION_BILLET_MASTER /* INFOTABLE {"dataShape":"AES.DataShape.Dynamic.PRODUCTION_BILLET_MASTER"} */,
-        Flag: "EDIT" /* STRING */
-    });
-}
-
-me.LengthUsed = LengthUsed;
-me.NextLength = Data.rows[0].BILLET_TREE_INPUT_LENGTH - LengthUsed;
