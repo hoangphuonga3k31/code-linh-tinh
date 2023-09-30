@@ -1,122 +1,280 @@
-if (eventData.newValue.value == false) {
-    let a = 1;
+var date = new Date();
+let WorkShiftData = Things["CTA.Business.Product.PO.PurchaseOrder"].GetTimeDateAndShift();
+// result: INFOTABLE dataShape: "AES.DataShape.Dynamic.WHM_MATERIAL_VOUCHER_DETAILS"
+Things["CTA.Business.Production.Production_Billet_Info"].GetAllData();
+let Billet_info = Things["CTA.Business.Production.Production_Billet_Info"].DataAll;
+let sort = {
+    name: "PR_KEY",
+    ascending: false,
+};
+Billet_info.Sort(sort);
+let Data = Resources["InfoTableFunctions"].CreateInfoTableFromDataShape({
+    infoTableName: "InfoTable",
+    dataShapeName: "AES.DataShape.Dynamic.PRODUCTION_BILLET_INFO",
+});
+Data.AddRow(Billet_info.rows[1]);
+
+// let Billet_info_data = me.LoadingData({
+//     strQuery: "SELECT * FROM PRODUCTION_BILLET_INFO WHERE WORK_ORDER_ID = "+ Billet_info.rows[1].WORK_ORDER_ID /* STRING [Required] */
+// });
+
+// let length = 0;
+// for (i = 0; i < Billet_info_data.getRowCount(); i++) {
+// 	length += Billet_info_data.rows[1].BILLET_TREE_INPUT_LENGTH;
+// }
+// let total_length = Things["CTA.Common.Categories.BilletHeating_ScanMSSQL500ms"].X1_4M1_A3C00 - length;
+
+Things["CTA.Business.Production.Production_Billet_Info"].SetExecuteDataUpdate({
+    User: Resources["CurrentSessionInfo"].GetCurrentUser() /* STRING */,
+    Length: me.X1_4M1_A3SE0 /* NUMBER */,
+    Data: Data /* INFOTABLE {"dataShape":"AES.DataShape.Dynamic.PRODUCTION_BILLET_INFO"} */,
+    Flag: "EDIT" /* STRING */,
+    Date: date /* DATETIME */,
+});
+
+let NewDataFor_PRODUCTION_BILLET_MASTER = Resources["InfoTableFunctions"].CreateInfoTableFromDataShape({
+    infoTableName: "InfoTable",
+    dataShapeName: "AES.DataShape.Dynamic.PRODUCTION_BILLET_MASTER",
+});
+let updatingDataFor_PRODUCTION_BILLET_MASTER = Resources["InfoTableFunctions"].CreateInfoTableFromDataShape({
+    infoTableName: "InfoTable",
+    dataShapeName: "AES.DataShape.Dynamic.PRODUCTION_BILLET_MASTER",
+});
+
+let NewBilletInfoData = Resources["InfoTableFunctions"].CreateInfoTableFromDataShape({
+    infoTableName: "InfoTable",
+    dataShapeName: "AES.DataShape.Dynamic.PRODUCTION_BILLET_INFO",
+});
+let UpdatingBilletInfoData = Resources["InfoTableFunctions"].CreateInfoTableFromDataShape({
+    infoTableName: "InfoTable",
+    dataShapeName: "AES.DataShape.Dynamic.PRODUCTION_BILLET_INFO",
+});
+
+let runningWOKEY = -1;
+let runningWO = me.LoadingData({
+    strQuery: "select PR_KEY from WORK_ORDERS where WORK_ORDER_TYPE = 'W_DEP' and STATUS = '2'",
+});
+if (runningWO.getRowCount > 0) {
+    runningWOKEY = runningWO.rows[0].PR_KEY;
 } else {
-    //	me.A1P01_String = Things["CTA.Common.BindingData_BilletHeating_Line4"].X1_4M1_A1P00;
-    // update code khi A1P00 không chứa cây đang cắt nóng
-    let billetInfo = me.LoadingData({
-        strQuery: "SELECT TOP(1) * FROM PRODUCTION_BILLET_INFO WHERE BILLET_TREE_STATUS = 'A' ORDER BY PR_KEY DESC"
+    let ReleasedWO = me.LoadingData({
+        strQuery: "select top 1 PR_KEY from WORK_ORDERS where WORK_ORDER_TYPE = 'W_DEP' and STATUS = '1' order by UPDATED_DATE desc",
     });
-    let work_order_code;
-    if (billetInfo.TO_WORK_ORDER_ID != -1) {
-        work_order_code = me.LoadingData({
-            strQuery: "SELECT WORK_ORDER_CODE FROM WORK_ORDERS WHERE PR_KEY = " + billetInfo.TO_WORK_ORDER_ID
-        });
-    } else {
-        work_order_code = me.LoadingData({
-            strQuery: "SELECT WORK_ORDER_CODE FROM WORK_ORDERS WHERE PR_KEY = " + billetInfo.WORK_ORDER_ID
-        });
+    if (ReleasedWO.getRowCount() > 0) {
+        runningWOKEY = ReleasedWO.rows[0].PR_KEY;
     }
-    me.A1P01_String = work_order_code.WORK_ORDER_CODE.padEnd(16, " ") + billetInfo.MATERIAL_LOT_NUMBER.padEnd(14, " ") + billetInfo.NUMBER_BILLET_TREE_INPUT.toString().padEnd(2, " ");
-    //
-    let production_master = me.LoadingData({
-        strQuery: "SELECT TOP(2) * FROM PRODUCTION_MASTER ORDER BY PR_KEY DESC" /* STRING [Required] */
-    });
-    if (production_master.rows[0].PART_NUMBER_OF_BILLET_STATUS == 'S') {
-        production_master.rows[0].PART_NUMBER_OF_BILLET_STATUS = 'A';
-        if (production_master.rows[0].PART_NUMBER_OF_BILLET == 1) {
-            let RemainLength = Things["CTA.Common.Categories.BilletHeating_ScanMSSQL500ms"].NextLength;
-            if (RemainLength != 0) {
-                production_master.rows[0].ALUMINUM_BAR_LENGTH = Things["CTA.Common.Categories.BilletHeating_ScanMSSQL500ms"].X1_4M1_A3SL0 - RemainLength;
-                Things["CTA.Common.Categories.BilletHeating_ScanMSSQL500ms"].X1_4M1_A3SL0 = 0;
-
-                production_master.rows[1].PART_NUMBER_OF_BILLET = production_master.rows[1].PART_NUMBER_OF_BILLET + 1;
-                production_master.rows[1].PART_NUMBER_OF_BILLET_STATUS = 'A';
-                production_master.rows[1].PART_OF_BILLET_LENGTH_ACT = RemainLength;
-
-                let NewData = Resources["InfoTableFunctions"].CreateInfoTableFromDataShape({
-                    infoTableName: "InfoTable",
-                    dataShapeName: "AES.DataShape.Dynamic.PRODUCTION_MASTER"
-                });
-                NewData.AddRow(production_master.rows[1]);
-                Things["CTA.Business.Categories.ProductionMaster"].DataTable_Execute = NewData;
-                Things["CTA.Business.Categories.ProductionMaster"].SetFlagExecute({
-                    stateFlag: 'ADD' /* STRING [Required] */
-                });
-                Things["CTA.Business.Categories.ProductionMaster"].ExecuteData();
-
-            }
-        }
-        production_master.RemoveRow(1);
-        //        production_master.MOLD_ID = mold_Data.MOLD_ID;
-        Things["CTA.Business.Categories.ProductionMaster"].DataTable_Execute = production_master;
-        Things["CTA.Business.Categories.ProductionMaster"].SetFlagExecute({
-            stateFlag: 'EDIT' /* STRING [Required] */
-        });
-        Things["CTA.Business.Categories.ProductionMaster"].ExecuteData();
-    }
-    me.C1C45_Sensor = ' ';
 }
-// set dữ liệu vào tag
-let wo = me.GetWorkOrderByWorkLine();
-if (wo.rows.length > 0) {
-    //	let valPO = me.LoadingData({
-    //		strQuery: "SELECT * FROM PURCHASE_ORDER_DETAILS WHERE PR_KEY = " + wo.FR_KEY /* STRING [Required] */
-    //	});
-    //    me.X1_4M2_B1P12 = valPO.PO_DETAILS_PROD_CODE;
-    //    let list_PO_Deatils_Prod_Code = me.LoadingData({
-    //    	strQuery: "select PO_DETAILS_PROD_CODE from PURCHASE_ORDER_DETAILS where PR_KEY in(select PURCHASE_ORDER_DETAIL_ID from WORK_ORDERS_DETAIL where FR_KEY = " + wo.PR_KEY + ")"
-    //    });
-    //    let loop_number = list_PO_Deatils_Prod_Code.rows.length > 30 ? 30 : list_PO_Deatils_Prod_Code.rows.length;
-    //    for(let i = 0; i < loop_number; i++){
-    //    	let tagID = 'X1_4M2_B1P' + 15 + i;
-    //        me[tagID] = list_PO_Deatils_Prod_Code.rows[i].PO_DETAILS_PROD_CODE;
-    //    }
 
-    let LOT_PRODUCT = me.GetLotProduct();
-    //	me.X1_4M2_B1P10 = wo.WORK_ORDER_CODE;
-    //	me.X1_4M2_B1M04 = (wo.STATUS === '2') ? true : false;
-    Things["CTA.Common.BindingData_PullAndCut_Line4"].X1_4M3_C3P00 = wo.WORK_ORDER_CODE;
-    //	me.X1_4M2_B1P11 = LOT_PRODUCT;
-    Things["CTA.Common.BindingData_PullAndCut_Line4"].X1_4M3_C3P01 = LOT_PRODUCT;
-
-    let lot = me.GetBilletInformation();
-    if (lot.rows.length > 0) {
-        me.X1_4M2_B1P08 = lot.LOT_BILLET;
-        //		me.X1_4M2_B1P13 = lot.SEGMENT_NUMBER;
-        me.X1_4M2_B1C01 = lot.BILLET_WIDTH;
-        me.X1_4M2_B1P47 = lot.NUMBER_BILLET;
-        let material_voucher_detail = me.LoadingData({
-            strQuery: "select distinct(B.MATERIAL_CODE) from WHM_MATERIAL_VOUCHER_DETAILS A join MD_MATERIALS B on A.MATERIAL_ID = B.MATERIAL_ID " +
-                "where WORK_ORDER_ID = '" + wo.PR_KEY + "' and LOT_NUMBER = '" + lot.LOT_BILLET + "'"
-        });
-        me.X1_4M2_B1P46 = material_voucher_detail.rows.length > 0 ? material_voucher_detail.rows[0].MATERIAL_CODE : '          ';
-    }
-
-    let mold = me.GetCurentMoldCode();
-    if (mold.rows.length > 0) {
-        let moldString = mold.MOLD_ID + ' - ' + mold.MOLD_CODE;
-        if (moldString != me.X1_4M2_B1P09) {
-            let currentMoldStringTag = me.X1_4M2_B1P09.split('-');
-            let mold_info = me.LoadingData({
-                strQuery: "select * from PRODUCTION_MOLD_INFO where MOLD_ID = (SELECT MOLD_ID FROM MD_MOLDS WHERE MOLD_CODE = '" + currentMoldStringTag[0] + "')"
-            });
-            mold_info.STATUS = 'W';
-            Things["CTA.Business.Production.Production_Mold_Info"].DataTable_Execute.AddRow(mold_info.rows[0]);
-            Things["CTA.Business.Production.Production_Mold_Info"].SetFlagExecute({
-                stateFlag: "EDIT"
-            });
-            Things["CTA.Business.Production.Production_Mold_Info"].ExecuteData();
-
-            let mold_master = me.LoadingData({
-                strQuery: "select * from WHM_MOLD_MASTER where MOLD_ID = (SELECT MOLD_ID FROM MD_MOLDS WHERE MOLD_CODE = '" + currentMoldStringTag[0] + "')"
-            });
-            mold_master.STATUS = '30';
-            Things["CTA.Business.Warehouse.WHM_Mold_Master"].DataTable_Execute.AddRow(mold_master.rows[0]);
-            Things["CTA.Business.Warehouse.WHM_Mold_Master"].SetFlagExecute({
-                stateFlag: "EDIT" /* STRING [Required] */
-            });
-            Things["CTA.Business.Warehouse.WHM_Mold_Master"].ExecuteData();
+function setData(DataSoLuongThanh_FromTag, tagData, i) {
+    let thisQueryString =
+        "select PBM.MATERIAL_ID as MATERIAL_ID from PRODUCTION_BILLET_MASTER PBM " +
+        "join WHM_MATERIAL_VOUCHER WMV on PBM.WHM_MATERIAL_VOUCHER_ID = WMV.PR_KEY " +
+        "join WHM_MATERIAL_VOUCHER_DETAILS WMVD on WMV.PR_KEY = WMVD.FR_KEY " +
+        "where PBM.MATERIAL_LOT_NUMBER = '" +
+        tagData.substring(16, 30).replace(/\s/g, "") +
+        "' and WMVD.WORK_ORDER_ID = " +
+        runningWOKEY;
+    let GatheringData = me.LoadingData({
+        strQuery: thisQueryString,
+    });
+    let dataToUpdate = me.LoadingData({
+        strQuery:
+            "select * from PRODUCTION_BILLET_MASTER where MATERIAL_LOT_NUMBER = '" +
+            tagData.substring(16, 30).replace(/\s/g, "") +
+            "'" /* STRING [Required] */,
+    });
+    //check xem trong bảng PRODUCTION_BILLET_MASTER có chưa
+    if (dataToUpdate.getRowCount() > 0) {
+        // có rồi > update dữ liệu
+        if (dataToUpdate.rows[0].STATUS != "P") {
+            dataToUpdate.rows[0].STATUS = "P";
+            dataToUpdate.rows[0].QUALITY += DataSoLuongThanh_FromTag;
         }
-        me.X1_4M2_B1P09 = mold.MOLD_ID + ' - ' + mold.MOLD_CODE;
+
+        if (dataToUpdate.rows[0].QUALITY == me.X1_4M1_A3C05) {
+            dataToUpdate.rows[0].STATUS = "C";
+        }
+        updatingDataFor_PRODUCTION_BILLET_MASTER.AddRow(dataToUpdate.rows[0]);
+    } else {
+        //chưa có > insert dữ liệu
     }
+
+    // //kiểm tra dữ liệu trong bảng PRODUCTION_BILLET_INFO, dựa theo lot
+    // let PBIdata = me.LoadingData({
+    //   strQuery:
+    //     "select PR_KEY from PRODUCTION_BILLET_INFO where MATERIAL_LOT_NUMBER = '" +
+    //     tagData.substring(16, 30).replace(/\s/g, "") +
+    //     "' order by NUMBER_BILLET_TREE_INPUT",
+    // });
+    // if (PBIdata.getRowCount() > 0) {
+    //   //nếu có dữ liệu, đọc từng row dữ liệu dựa theo số thanh xác định được từ tag
+    //   for (let tree_order = 0; tree_order < DataSoLuongThanh_FromTag; tree_order++) {
+    //     let checkResult = me.LoadingData({
+    //       strQuery:
+    //         "select * from PRODUCTION_BILLET_INFO where MATERIAL_LOT_NUMBER = '" +
+    //         tagData.substring(16, 30).replace(/\s/g, "") +
+    //         "' and NUMBER_BILLET_TREE_INPUT = " +
+    //         (tree_order + 1),
+    //     });
+    //     if (checkResult.getRowCount() == 0) {
+    //       let newEntryData = {
+    //         WORK_ORDER_ID: runningWOKEY, // NUMBER
+    //         WORK_LINE_ID: "Line_04", // STRING
+    //         WORK_SHIFT_ID: WorkShiftData.rows[0].SHIFT, // INTEGER
+    //         MATERIAL_ID: GatheringData.getRowCount() > 0 ? GatheringData.rows[0].MATERIAL_ID : -1, // INTEGER
+    //         MATERIAL_LOT_NUMBER: tagData.substring(16, 30).replace(/\s/g, ""), // STRING
+    //         TOTAL_BILLETS_ON_RACK: parseInt(tagData.substring(30, 32).replace(/\s/g, "")), // INTEGER
+    //         NUMBER_BILLET_TREE_INPUT: tree_order + 1, // INTEGER
+    //         INPUT_DATE: date, // DATETIME
+    //         BILLET_TREE_INPUT_LENGTH: me["X1_4M1_A1P" + (26 + tree_order)], // NUMBER
+    //         BILLET_TREE_STATUS: "S", // STRING
+    //         PART_OF_BILLET_LENGTH: me.X1_4M1_A3SL0, // NUMBER
+    //         TOTAL_DEFECTS_OF_BILLET: 0, // NUMBER
+    //         TO_WORK_ORDER_ID: -1, // NUMBER
+    //         CREATED_DATE: date, // DATETIME
+    //         CREATED_BY: Resources["CurrentSessionInfo"].GetCurrentUser(), // STRING
+    //         UPDATED_DATE: date, // DATETIME
+    //         UPDATED_BY: Resources["CurrentSessionInfo"].GetCurrentUser(), // STRING
+    //       };
+    //       NewBilletInfoData.AddRow(newEntryData);
+    //     } else {
+    //       if (checkResult.rows[0].BILLET_TREE_STATUS.replace(/\s/g, "").length == 0 || checkResult.rows[0].BILLET_TREE_INPUT_LENGTH == 0 || checkResult.rows[0].TOTAL_BILLETS_ON_RACK != parseInt(tagData.substring(30, 32).replace(/\s/g, ""))) {
+    //         checkResult.rows[0].BILLET_TREE_STATUS = "S";
+    //         checkResult.rows[0].BILLET_TREE_INPUT_LENGTH = me["X1_4M1_A1P" + (26 + tree_order)];
+    //         checkResult.rows[0].TOTAL_BILLETS_ON_RACK = parseInt(tagData.substring(30, 32).replace(/\s/g, ""));
+    //         UpdatingBilletInfoData.AddRow(checkResult.rows[0]);
+    //       }
+
+    //       for (let ExistedData = 1; ExistedData < checkResult.getRowCount(); ExistedData++) {
+    //         let DeletingBilletInfoData = Resources["InfoTableFunctions"].CreateInfoTableFromDataShape({
+    //           infoTableName: "InfoTable",
+    //           dataShapeName: "AES.DataShape.Dynamic.PRODUCTION_BILLET_INFO",
+    //         });
+    //         DeletingBilletInfoData.AddRow(checkResult.rows[ExistedData]);
+    //         Things["CTA.Business.Production.Production_Billet_Info"].SetExecuteDataUpdate({
+    //           User: Resources["CurrentSessionInfo"].GetCurrentUser() /* STRING */,
+    //           Length: me.X1_4M1_A3SE0 /* NUMBER */,
+    //           Data: DeletingBilletInfoData /* INFOTABLE {"dataShape":"AES.DataShape.Dynamic.PRODUCTION_BILLET_INFO"} */,
+    //           Flag: "DEL" /* STRING */,
+    //           Date: date /* DATETIME */,
+    //         });
+    //       }
+    //     }
+    //   }
+    // } else {
+    //   //nếu chưa có dữ liệu, insert dữ liệu
+    //   for (let billetTreeNumbers = 0; billetTreeNumbers < DataSoLuongThanh_FromTag; billetTreeNumbers++) {
+    //     let newEntryData = {
+    //       WORK_ORDER_ID: runningWOKEY, // NUMBER
+    //       WORK_LINE_ID: "Line_04", // STRING
+    //       WORK_SHIFT_ID: WorkShiftData.rows[0].SHIFT, // INTEGER
+    //       MATERIAL_ID: GatheringData.getRowCount() > 0 ? GatheringData.rows[0].MATERIAL_ID : -1, // INTEGER
+    //       MATERIAL_LOT_NUMBER: tagData.substring(16, 30).replace(/\s/g, ""), // STRING
+    //       TOTAL_BILLETS_ON_RACK: parseInt(tagData.substring(30, 32).replace(/\s/g, "")), // INTEGER
+    //       NUMBER_BILLET_TREE_INPUT: billetTreeNumbers + 1, // INTEGER
+    //       INPUT_DATE: date, // DATETIME
+    //       BILLET_TREE_INPUT_LENGTH: me["X1_4M1_A1P" + (26 + billetTreeNumbers)], // NUMBER
+    //       BILLET_TREE_STATUS: "S", // STRING
+    //       PART_OF_BILLET_LENGTH: me.X1_4M1_A3SL0, // NUMBER
+    //       TOTAL_DEFECTS_OF_BILLET: 0, // NUMBER
+    //       TO_WORK_ORDER_ID: -1, // NUMBER
+    //       CREATED_DATE: date, // DATETIME
+    //       CREATED_BY: Resources["CurrentSessionInfo"].GetCurrentUser(), // STRING
+    //       UPDATED_DATE: date, // DATETIME
+    //       UPDATED_BY: Resources["CurrentSessionInfo"].GetCurrentUser(), // STRING
+    //     };
+    //     NewBilletInfoData.AddRow(newEntryData);
+    //   }
+    // }
+}
+
+let LengthUsed = 0;
+for (let i = 0; i < 5; i++) {
+    let tagName = "X1_4M1_A1P1" + i.toString().padStart(1, "0");
+    let tagData = me[tagName];
+
+    if (tagData && tagData.replace(/\s/g, "").length > 0) {
+        let NumberOfBilletInsideMachine_TagName = "X1_4M1_A1P1" + (i + 5);
+        let NumberOfBilletInsideMachine_TagData = me[NumberOfBilletInsideMachine_TagName];
+        checkData(tagName, tagData, NumberOfBilletInsideMachine_TagData, i);
+    } else {
+        break;
+    }
+}
+
+function checkData(tagName, tagData, quantityFromTag, index) {
+    let dataToUpdate = me.LoadingData({
+        strQuery:
+            "select * from PRODUCTION_BILLET_MASTER where MATERIAL_LOT_NUMBER = '" +
+            tagData.substring(16, 30).replace(/\s/g, "") +
+            "'" /* STRING [Required] */,
+    });
+    //check xem trong bảng PRODUCTION_BILLET_MASTER có chưa
+    if (dataToUpdate.getRowCount() > 0) {
+        // có rồi > update dữ liệu
+        if (dataToUpdate.rows[0].STATUS != "P") {
+            dataToUpdate.rows[0].STATUS = "P";
+            dataToUpdate.rows[0].QUALITY += DataSoLuongThanh_FromTag;
+        }
+
+        // if (dataToUpdate.rows[0].QUALITY == me.X1_4M1_A3C05) {
+        //     dataToUpdate.rows[0].STATUS = "C";
+        // }
+        updatingDataFor_PRODUCTION_BILLET_MASTER.AddRow(dataToUpdate.rows[0]);
+    } else {
+        //chưa có > insert dữ liệu
+    }
+
+    let thisQueryString =
+        "select PBM.MATERIAL_ID as MATERIAL_ID from PRODUCTION_BILLET_MASTER PBM " +
+        "join WHM_MATERIAL_VOUCHER WMV on PBM.WHM_MATERIAL_VOUCHER_ID = WMV.PR_KEY " +
+        "join WHM_MATERIAL_VOUCHER_DETAILS WMVD on WMV.PR_KEY = WMVD.FR_KEY " +
+        "where PBM.MATERIAL_LOT_NUMBER = '" +
+        tagData.substring(16, 30).replace(/\s/g, "") +
+        "' and WMVD.WORK_ORDER_ID = " +
+        runningWOKEY;
+    let GatheringData = me.LoadingData({
+        strQuery: thisQueryString,
+    });
+
+    //kiểm tra dữ liệu trong bảng PRODUCTION_BILLET_INFO, dựa theo lot
+    //check lot đầu tiên
+    if (index == 0) {
+
+    }
+    let PBIdata = me.LoadingData({
+        strQuery:
+            "select PR_KEY from PRODUCTION_BILLET_INFO where MATERIAL_LOT_NUMBER = '" +
+            tagData.substring(16, 30).replace(/\s/g, "") +
+            "' order by NUMBER_BILLET_TREE_INPUT",
+    });
+
+
+}
+
+if (updatingDataFor_PRODUCTION_BILLET_MASTER.getRowCount() > 0) {
+    Things["CTA.Business.Categories.PRODUCTION_BILLET_MASTER"].SetExecuteData({
+        Data: updatingDataFor_PRODUCTION_BILLET_MASTER /* INFOTABLE {"dataShape":"AES.DataShape.Dynamic.PRODUCTION_BILLET_MASTER"} */,
+        Flag: "EDIT" /* STRING */,
+    });
+}
+
+if (NewBilletInfoData.getRowCount() > 0) {
+    Things["CTA.Business.Production.Production_Billet_Info"].SetExecuteDataUpdate({
+        User: Resources["CurrentSessionInfo"].GetCurrentUser() /* STRING */,
+        Length: me.X1_4M1_A3SE0 /* NUMBER */,
+        Data: NewBilletInfoData /* INFOTABLE {"dataShape":"AES.DataShape.Dynamic.PRODUCTION_BILLET_INFO"} */,
+        Flag: "ADD" /* STRING */,
+        Date: date /* DATETIME */,
+    });
+}
+
+if (UpdatingBilletInfoData.getRowCount() > 0) {
+    Things["CTA.Business.Production.Production_Billet_Info"].SetExecuteDataUpdate({
+        User: Resources["CurrentSessionInfo"].GetCurrentUser() /* STRING */,
+        Length: me.X1_4M1_A3SE0 /* NUMBER */,
+        Data: UpdatingBilletInfoData /* INFOTABLE {"dataShape":"AES.DataShape.Dynamic.PRODUCTION_BILLET_INFO"} */,
+        Flag: "EDIT" /* STRING */,
+        Date: date /* DATETIME */,
+    });
 }
