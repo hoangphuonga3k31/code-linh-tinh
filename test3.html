@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabulator/5.5.1/css/tabulator.min.css" />
+    <script src="https://unpkg.com/tabulator-tables@5.3.4/dist/js/tabulator.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.0.0/jquery.min.js"></script>
+</head>
+
+<body>
+    <div class="wrapper">
+        <div id="container" style="width: 1600px;">
+            <div class="header-labels">
+                <div class="logo">
+                    <img src="./logo-CTA.png" style="width: 100px;" alt="">
+                </div>
+                <div class="report-name">
+                    <h3>BÁO CÁO CHI TIẾT BILLET SỬ DỤNG CÔNG ĐOẠN ĐÙN ÉP NHÔM THANH</h3>
+                </div>
+                <div class="report-number">
+                    <div class="report-number-detail">
+                        <p>Mã số:</p>
+                    </div>
+                    <div class="report-number-detail">
+                        <p>Lần NH/L sửa:</p>
+                    </div>
+                    <div class="report-number-detail">
+                        <p>Soạn:</p>
+                    </div>
+                    <div class="report-number-detail">
+                        <p>Áp dụng:</p>
+                    </div>
+                </div>
+            </div>
+            <div id="example-name">
+                <div class="example-name_title">
+                    <p></p>
+                </div>
+                <div class="example-name_date">
+
+                </div>
+            </div>
+            <div id="pageprint" style="width: 100%;">
+
+                <div id="example-table">
+                    <p>aaaaaaaaa</p>
+                </div>
+            </div>
+            <div class="footer">
+                <div>
+                    <p><b>PB.Sản xuất</b></p>
+                    <i>(Ký, họ tên)</i>
+                </div>
+                <div>
+                    <i>Ngày.....tháng.....năm.....</i>
+                    <p><b>phê duyệt</b></p>
+                    <i>(Ký, họ tên)</i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="download-button">
+        <button id="download-reporting-file" onclick="print1()">Download</button>
+    </div>
+</body>
+<script>
+    // Your JSON data
+    async function getResponse() {
+        const response = await fetch(
+            'http://thingworxfoundation.aesvietnam.com/Thingworx/Things/CTA.Common.Connect.Report/Properties/DataReportCTARPT007',
+            {
+                method: 'GET',
+                headers: {
+                    "Content-Type": "application/json",
+                    // 'Content-Type': 'application/x-www-form-urlencoded',
+                    "Accept": "application/json",
+                    "appKey": "9c028cea-e79d-43a5-8d85-cdfcc0472de9"
+                }
+            }
+        );
+        const data = await response.json()
+        return data
+    }
+    function print1() {
+        // var elementHTML = document.querySelector("#container");
+        // docPDF.html(elementHTML, {
+        //     callback: function (docPDF) {
+        //         docPDF.save('HTML Linuxhint web page.pdf');
+        //     },
+        //     orientation: "landscape",
+        //     x: 15,
+        //     y: 15,
+        // });
+
+        // table.print(false, true);
+        print();
+    }
+
+    let a = "start";
+    getResponse().then(result => {
+        // console.log(result.rows[0].ConfigAndDataJSON)
+        a = result.rows[0].DataReportCTARPT007
+        console.log(a);
+        return result
+    }).then((result) => {
+        let currentTime = new Date();
+        let datetime = +currentTime.getDate().toString().padStart(2, '0') + '/' + (currentTime.getMonth() + 1).toString().padStart(2, '0') + '/' +
+            currentTime.getFullYear().toString().substring(2, 4)
+
+        let number = result.rows[0].DataReportCTARPT007.Data.length - 1
+        var phantuchon = $(".report-name");
+        phantuchon.append("<p>Từ ngày " + result.rows[0].DataReportCTARPT007.value[0].FROM_DATE + " đến ngày " + result.rows[0].DataReportCTARPT007.value[0].TO_DATE + "</p>");
+        var phantuchon = $(".example-name_date");
+        phantuchon.append("<i>Ngày cập nhật: " + datetime + "</i>");
+
+        let headerHTMLString = '<div class="header-labels">' +
+            '    <div class="logo">' +
+            '        <img src="" alt="">' +
+            '    </div>' +
+
+            '    <div class="report-name">' +
+            '        <h3>BÁO CÁO THỐNG KÊ</h3>' +
+            '    </div>' +
+
+            '    <div class="report-number">' +
+            '        <div class="report-number-detail">' +
+            '            <p>Mã số:</p>' +
+            '        </div>' +
+
+            '        <div class="report-number-detail">' +
+            '            <p>Lần NH/L sửa:</p>' +
+            '        </div>' +
+
+            '        <div class="report-number-detail">' +
+            '            <p>Soạn:</p>' +
+            '        </div>' +
+
+            '        <div class="report-number-detail">' +
+            '            <p>Áp dụng:</p>' +
+            '        </div>' +
+            '    </div>' +
+            '</div>';
+        let footerHTMLString = '<div class="footer">' +
+            '    <p>Người lập</p>' +
+            '    <p>Người phê duyệt</p>' +
+            '</div>' +
+            '</div>'
+
+        // Create a Tabulator table
+        let table = new Tabulator("#example-table", {
+            // data: jsonData,
+            data: result.rows[0].DataReportCTARPT007.Data,
+            layout: "fitColumns",
+            responsiveLayout: "true",
+            height: "auto",
+            groupBy: ["LOT_NUMBER"],
+            // groupBy: [""],
+            groupHeader: [
+                function (value, count, data) {
+                    //value - the value all members of this group share
+                    //count - the number of rows in this group
+                    //data - an array of all the row data objects in this group
+                    //group - the group component for the group
+
+                    return value
+                    //value + "<span style='color:#d00; margin-left:10px;'>(" + count + " sản phẩm)</span>";
+                }
+            ],
+            printAsHtml: true,
+            printHeader: headerHTMLString,
+            printFooter: footerHTMLString,
+            // height: "100%",
+            columnHeaderVertAlign: "bottom", //align header contents to bottom of cell
+            responsiveLayout: "hide",
+
+            // columns: [
+            //     // { title: "Số YC", field: "PURCHASE_ORDER_CODE", width: 300 },
+            //     {//create column group
+            //         title: "Thông tin cơ bản",
+            //         columns: [
+            //             { title: "Lot sản phẩm", field: "LOT_NUMBER", hozAlign: "left", width: 160 },
+            //             { title: "Số giá", field: "PALLET_ID", hozAlign: "center", width: 120 },
+            //             { title: "Mã sản phẩm", field: "PO_DETAILS_PROD_CODE", hozAlign: "left", sorter: "number", width: 200 },
+            //         ],
+            //     },
+            //     {//create column group
+            //         title: "Thông tin chi tiết",
+            //         columns: [
+            //             { title: "Số lượng thanh", field: "QUANTITY_INCOME", hozAlign: "center", bottomCalc: "sum", bottomCalcParams: { precision: 0 }, width: 140 },
+            //             { title: "Trọng lượng 1 thanh (kg)", field: "ACTUAL_WEIGHT", hozAlign: "center", width: 200 },
+            //         ],
+            //     },
+            // ],
+            columns: result.rows[0].DataReportCTARPT007.Config
+        });
+
+        // window.jsPDF = window.jspdf.jsPDF;
+        // var docPDF = new jsPDF('l', 'pt', 'a3');
+        // docPDF.addFont('./SVN-Times New Roman.ttf', 'Times New Roman', 'normal');
+        // docPDF.setFont('Times New Roman');
+
+        setTimeout(function () {
+            print1();
+        }, 1000)
+    });
+
+</script>
+<style>
+    body {
+        display: flex;
+        flex-direction: column;
+    }
+
+    #container {
+        margin: 0 auto;
+    }
+
+    .header-labels {
+        display: flex;
+        flex-direction: row;
+        height: auto;
+        border: 1px solid #000;
+        justify-content: space-between;
+        margin: auto;
+    }
+
+    .header-labels>.logo {
+        width: 100px;
+        height: auto;
+        /* border-right: 1px solid #000; */
+        border: 1px solid #000;
+        border-left: none;
+        display: flex;
+        justify-self: center;
+    }
+
+    .header-labels>.logo>img {
+        height: auto;
+        /* object-fit: cover; */
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-position: center;
+    }
+
+    .header-labels>.report-name {
+        font-size: 25px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .header-labels>.report-name>h3 {
+        margin: auto auto;
+    }
+
+    .header-labels>.report-name>p {
+        margin: auto auto;
+        font-size: 20px;
+        color: blue;
+    }
+
+    .header-labels>.report-number {
+        height: auto;
+        width: 160px;
+        border-left: 1px solid #000;
+    }
+
+    .header-labels>.report-number>.report-number-detail>p {
+        margin: 2px 4px !important;
+    }
+
+    .header-labels>.report-number>.report-number-detail {
+        border-bottom: 1px solid #000;
+    }
+
+    .header-labels>.report-number>.report-number-detail:last-child {
+        border-bottom: none;
+    }
+
+    #example-name>.example-name_title {
+        font-weight: bold !important;
+        display: flex !important;
+        font-size: 20px;
+        margin-top: 10px;
+    }
+
+    #example-name>.example-name_title>p {
+        margin: auto auto;
+    }
+
+    #example-name>.example-name_date {
+        font-weight: bold !important;
+    }
+
+    #pageprint {
+        margin-top: 40px;
+        display: flex;
+    }
+
+    #example-table {
+        margin: 0 auto;
+    }
+
+    .footer {
+        display: flex;
+        flex-direction: row;
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .footer>div {
+        margin: 20px auto;
+        text-align: center;
+    }
+
+    .footer>div>i,
+    p {
+        margin: auto auto;
+    }
+
+    @media print {
+
+        body {
+            visibility: hidden;
+        }
+
+        .wrapper {
+            visibility: visible;
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            display: flex !important;
+            flex-direction: column !important;
+
+        }
+
+        #container {
+            width: 1000px;
+            display: flex !important;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .header-labels {
+            width: 90%;
+        }
+
+        .header-labels>.logo {
+            width: 100px;
+            height: auto;
+            border: 1px solid #000 !important;
+            border-left: none;
+            display: flex;
+            justify-self: center;
+        }
+
+        .header-labels>.report-name {
+            font-size: 25px;
+            display: flex;
+            flex-direction: column;
+
+        }
+
+        .header-labels>.report-name>h3 {
+            margin: auto 100px !important;
+            font-size: 20px;
+        }
+
+        #pageprint {
+            width: 100%;
+            position: relative;
+            display: flex !important;
+            justify-content: center;
+            align-items: center;
+            margin-top: 40px !important;
+        }
+
+        #example-name {
+            width: 90%;
+        }
+
+        #example-name>.example-name_title {
+            width: auto;
+            font-weight: bold !important;
+            display: flex !important;
+            font-size: 20px;
+            margin-top: 10px;
+        }
+
+        #example-name>.example-name_title>p {
+            margin: auto auto;
+        }
+
+        #example-name>.example-name_date {
+            width: auto;
+            font-weight: bold !important;
+            display: flex !important;
+            justify-content: left;
+            align-items: right !important;
+        }
+    }
+</style>
+
+</html>

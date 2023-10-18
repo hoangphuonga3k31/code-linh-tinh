@@ -11,98 +11,50 @@ let convertDateString = (dateString) => {
     return isoString.toString();
 };
 
+let A1P00String_LotBillet = me.X1_4M1_A1P00;
+let A3C05String_NumberOfBilletTree = me.X1_4M1_A3C05;
+let A3C03String_NumberOfBilletPart = me.X1_4M1_A3C03;
+let A3C02String_BilletLength = me.X1_4M1_A3C02;
+let A3SL0String_BilletLength = me.X1_4M1_A3SL0;
+
+let currentShift = Things["CTA.Business.Product.PO.PurchaseOrder"].GetTimeDateAndShift();
 let currentDatetime = Things["CTA.Business.Product.PO.PurchaseOrderDetails"].GetdateTime();
 let currentDatetimeToString = currentDatetime.getFullYear().toString() + "-" + (parseInt(currentDatetime.getMonth()) + 1).toString().padStart(2, '0') + "-" + currentDatetime.getDate().toString().padStart(2, '0') + " " + currentDatetime.getHours().toString().padStart(2, '0') + ":" + currentDatetime.getMinutes().toString().padStart(2, '0') + ":" + currentDatetime.getSeconds().toString().padStart(2, '0');
 
-let NewData = Resources["InfoTableFunctions"].CreateInfoTableFromDataShape({
+let newBillet = Resources["InfoTableFunctions"].CreateInfoTableFromDataShape({
     infoTableName: "InfoTable",
-    dataShapeName: "AES.DataShape.Dynamic.PRODUCTION_MASTER_DETAIL"
+    dataShapeName: "AES.DataShape.Dynamic.PRODUCTION_MASTER"
 });
 
-let NewDataFor_Work_Order_Config = Resources["InfoTableFunctions"].CreateInfoTableFromDataShape({
-    infoTableName: "InfoTable",
-    dataShapeName: "AES.DataShape.Dynamic.WORK_ORDERS_DETAIL"
-});
+if (A1P00String_LotBillet.replace(/\s/g, "").length > 0) {
+    // let WOData = me.LoadingData({
+    //     strQuery: "select PR_KEY from WORK_ORDERS where WORK_ORDER_CODE = '" + A1P00String_LotBillet.substring(0, 16).replace(/\s/g, "") + "'" /* STRING [Required] */
+    // });
 
-let NewDataForWHMProductMaster = Resources["InfoTableFunctions"].CreateInfoTableFromDataShape({
-    infoTableName: "InfoTable",
-    dataShapeName: "AES.DataShape.Dynamic.WHM_PRODUCT_MASTER"
-});
-
-if (Data && Data != undefined && Data.rows.length > 0) {
-    let WODetail_PR_KEY = me.Get_Pr_Key({
-        tableName: "WORK_ORDERS_DETAIL" /* STRING */
+    let LastPartNumberOfBillet = me.LoadingData({
+        strQuery: "select max(PART_NUMBER_OF_BILLET) AS LastPartNumberOfBillet from PRODUCTION_MASTER where MATERIAL_LOT_NUMBER = '" + me.X1_4M1_A1P00.substring(16, 30).replace(/\s/g, '') + "' AND NUMBER_BILLET_TREE_CUT = " + (me.X1_4M1_A3C05 - 1)
     });
-    let WODetail_PR_KEY_index = 0;
-    Data.rows.forEach(row => {
-        let ProductionMasterDetailDataStageDE = me.LoadingData({
-            strQuery: "select * from PRODUCTION_MASTER_DETAIL where PALLET_ID = '" + row.PALLET_ID + "' and PRODUCT_LOT_NUMBER = '" + row.PRODUCT_LOT_NUMBER + "' and STATUS = '110' and STAGE_TYPE = 'DE'" /* STRING [Required] */
-        });
-        // AES.DataShape.Dynamic.PRODUCTION_MASTER_DETAIL entry object
-        if (ProductionMasterDetailDataStageDE.getRowCount() > 0) {
 
-
-            let DataFromDEStage = me.LoadingData({
-                strQuery: "select WORK_ORDER_ID from PRODUCTION_MASTER_DETAIL where STAGE_TYPE = 'DE' and PRODUCT_LOT_NUMBER = '" + ProductionMasterDetailDataStageDE.rows[0].PRODUCT_LOT_NUMBER + "' and PALLET_ID = '" + row.PALLET_ID + "'" /* STRING [Required] */
-            });
-            let WODataFromDEStage = me.LoadingData({
-                strQuery: "select FR_KEY from WORK_ORDERS where PR_KEY = " + DataFromDEStage.rows[0].WORK_ORDER_ID /* STRING [Required] */
-            });
-
-            let newEntryFor_WO_Detail = {
-                PR_KEY: WODetail_PR_KEY.rows[0].PR_KEY + WODetail_PR_KEY_index,
-                FR_KEY: WO_ID, // NUMBER
-                PALLET_ID: row.PALLET_ID, // STRING
-                PRODUCT_LOT_NUMBER: ProductionMasterDetailDataStageDE.rows[0].PRODUCT_LOT_NUMBER, // STRING
-                PURCHASE_ORDER_DETAIL_ID: WODataFromDEStage.rows[0].FR_KEY, // NUMBER
-                QUANTITY_PLAN: ProductionMasterDetailDataStageDE.rows[0].TOTAL_ALUMINUM_BAR, // INTEGER
-                WEIGHT_PLAN: ProductionMasterDetailDataStageDE.rows[0].ACTUAL_WEIGHT, // NUMBER
-                STATUS: '0', // STRING
-                NUMBER_OF_HANGER_BEAMS: -1, // INTEGER
-                ACTIVE: 0, // BOOLEAN
-                CREATED_DATE: convertDateString(currentDatetimeToString), // DATETIME
-                CREATED_BY: Resources["CurrentSessionInfo"].GetCurrentUser(), // STRING
-                UPDATED_DATE: convertDateString(currentDatetimeToString), // DATETIME
-                UPDATED_BY: Resources["CurrentSessionInfo"].GetCurrentUser() // STRING
-            };
-            NewDataFor_Work_Order_Config.AddRow(newEntryFor_WO_Detail);
-            WODetail_PR_KEY_index++;
-
-            let newEntry = {
-                WORK_ORDER_ID: WO_ID, // NUMBER
-                WORK_LINE_ID: -1, // STRING
-                WORK_SHIFT_ID: -1, // INTEGER
-                STAGE_TYPE: "HG", // STRING
-                PRODUCT_LOT_NUMBER: ProductionMasterDetailDataStageDE.rows[0].PRODUCT_LOT_NUMBER, // STRING
-                PALLET_ID: row.PALLET_ID, // STRING
-                STATUS: "110", // STRING
-                ALUMINUM_BAR_LENGTH: ProductionMasterDetailDataStageDE.rows[0].ALUMINUM_BAR_LENGTH, // NUMBER
-                TOTAL_ALUMINUM_BAR: ProductionMasterDetailDataStageDE.rows[0].TOTAL_ALUMINUM_BAR, // INTEGER
-                TOTAL_ALUMINUM_BAR_DEFECT: ProductionMasterDetailDataStageDE.rows[0].TOTAL_ALUMINUM_BAR_DEFECT, // INTEGER
-                TOTAL_WEIGHT_OF_ALUMINUM_DEFECTS: ProductionMasterDetailDataStageDE.rows[0].TOTAL_WEIGHT_OF_ALUMINUM_DEFECTS, // NUMBER
-                TOTAL_WEIGHT_OF_BILLET_DEFECTS: ProductionMasterDetailDataStageDE.rows[0].TOTAL_WEIGHT_OF_BILLET_DEFECTS, // NUMBER
-                START_TIME: ProductionMasterDetailDataStageDE.rows[0].START_TIME, // DATETIME
-                END_TIME: ProductionMasterDetailDataStageDE.rows[0].END_TIME, // DATETIME
-                ACTUAL_WEIGHT: ProductionMasterDetailDataStageDE.rows[0].ACTUAL_WEIGHT, // NUMBER
-                //WORK_ORDER_DETAIL_ID: ProductionMasterDetailDataStageDE.rows[0].WORK_ORDER_DETAIL_ID // NUMBER
-                WORK_ORDER_DETAIL_ID: newEntryFor_WO_Detail.PR_KEY
-            };
-            NewData.AddRow(newEntry);
-        }
+    let ProductionMasterData = me.LoadingData({
+        strQuery: "select top 1 * from PRODUCTION_MASTER where MATERIAL_LOT_NUMBER = '" + me.X1_4M1_A1P00.substring(16, 30).replace(/\s/g, '') + "' and NUMBER_BILLET_TREE_CUT = " + (me.X1_4M1_A3C05 - 1) + " order by PART_NUMBER_OF_BILLET desc" /* STRING [Required] */
     });
-}
 
-if (NewData.getRowCount() > 0) {
-    Things["CTA.Business.Categories.Production_Master_Details"].SetExecuteData({
-        Data: NewData /* INFOTABLE {"dataShape":"AES.DataShape.Dynamic.PRODUCTION_MASTER_DETAIL"} */,
-        id: undefined /* STRING */,
+    ProductionMasterData.rows[0].PART_NUMBER_OF_BILLET_STATUS = "D";
+    ProductionMasterData.rows[0].PART_OF_BILLET_LENGTH_ACT = me.X1_4M1_A3SL0;
+    ProductionMasterData.rows[0].PART_NUMBER_OF_BILLET = LastPartNumberOfBillet.rows[0].LastPartNumberOfBillet + 1;
+    ProductionMasterData.rows[0].UPDATED_BY = Resources["CurrentSessionInfo"].GetCurrentUser();
+    ProductionMasterData.rows[0].UPDATED_DATE = convertDateString(currentDatetimeToString);
+
+    newBillet.AddRow(ProductionMasterData.rows[0]);
+
+    Things["CTA.Business.Categories.ProductionMaster"].SetExecuteForMoldHeating({
+        Data: newBillet /* INFOTABLE {"dataShape":"AES.DataShape.Dynamic.PRODUCTION_MASTER"} */,
         Flag: "ADD" /* STRING */
     });
 }
 
-if (NewDataFor_Work_Order_Config.getRowCount() > 0) {
-    Things["CTA.Business.Production.Work_Orders_Details"].SetExecuteDataForAging({
-        Data: NewDataFor_Work_Order_Config /* INFOTABLE {"dataShape":"AES.DataShape.Dynamic.PRODUCTION_MASTER_DETAIL"} */,
-        Flag: "ADD" /* STRING */
-    });
+if (newBillet.getRowCount() > 0) {
+
 }
+
+result = "ok";

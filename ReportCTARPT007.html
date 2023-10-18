@@ -7,24 +7,25 @@
     <script src="https://unpkg.com/tabulator-tables@5.3.4/dist/js/tabulator.min.js"></script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.0.0/jquery.min.js"></script>
-    <script type="text/javascript" src="./printThis.js"></script>
+    <!-- <script type="text/javascript" src="./printThis.js"></script> -->
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.14/jspdf.plugin.autotable.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script> -->
 </head>
 
 <body>
     <div class="wrapper">
-        <div id="container" style="width: 1200px;">
+        <div id="container">
             <div class="header-labels">
                 <div class="logo">
                     <img src="./CTA-logo.png" alt="">
                 </div>
                 <div class="report-name">
-                    <h3>BÁO CÁO THỐNG KÊ</3>
+                    <h3>BÁO CÁO CHI TIẾT BILLET SỬ DỤNG CÔNG ĐOẠN ĐÙN ÉP NHÔM THANH</3>
+
                 </div>
                 <div class="report-number">
                     <div class="report-number-detail">
@@ -43,6 +44,7 @@
             </div>
             <div id="pageprint" style="width: 100%;">
                 <div id="example-table">
+                    <p>aaaaaaaaa</p>
                 </div>
             </div>
             <div class="footer">
@@ -465,7 +467,7 @@
         ]
     }
     let jsonData = jsonData1.CTA_Paint;
-    console.log(jsonData.CTA_Paint)
+    console.log(jsonData)
 
     let headerHTMLString = '<div class="header-labels">' +
         '    <div class="logo">' +
@@ -503,9 +505,8 @@
     // Create a Tabulator table
     let table = new Tabulator("#example-table", {
         data: jsonData,
-        // layout: "fitColumns",
-        layout: "fitData",
-        responsiveLayout: "true",
+        layout: "fitColumns",
+        responsiveLayout: "false",
         height: "auto",
         // groupBy: ["PURCHASE_ORDER_CODE", "PO_DETAILS_PROD_CODE"],
         groupBy: "PURCHASE_ORDER_CODE",
@@ -518,8 +519,6 @@
             return value + "<span style='color:#d00; margin-left:10px;'>(" + count + " sản phẩm)</span>";
         },
         printAsHtml: true,
-        printStyled: true,
-        // printCopyStyle: true,
         printHeader: headerHTMLString,
         printFooter: footerHTMLString,
         // height: "100%",
@@ -529,32 +528,64 @@
         columns: [
             // { title: "Số YC", field: "PURCHASE_ORDER_CODE", width: 300 },
             {//create column group
-                title: "Thông tin cơ bản",
-                columns: [
-                    { title: "Lot sản phẩm", field: "LOT_NUMBER", hozAlign: "left", width: 160 },
-                    { title: "Số giá", field: "PALLET_ID", hozAlign: "center", width: 120 },
-                    { title: "Mã sản phẩm", field: "PO_DETAILS_PROD_CODE", hozAlign: "left", sorter: "number", width: 200 },
-                ],
+                title: "Stt", field: "PALLET_ID", hozAlign: "left", width: 80, headerSort: false
             },
             {//create column group
-                title: "Thông tin chi tiết",
-                columns: [
-                    { title: "Số lượng thanh", field: "QUANTITY_INCOME", hozAlign: "center", bottomCalc: "sum", bottomCalcParams: { precision: 0 }, width: 140 },
-                    { title: "Trọng lượng 1 thanh (kg)", field: "ACTUAL_WEIGHT", hozAlign: "center", width: 200 },
-                ],
+                title: "Mác Billet", field: "LOT_NUMBER", hozAlign: "left", width: 100, headerSort: false
+            },
+            {//create column group
+                title: "Số Lot", field: "PO_DETAILS_PROD_CODE", hozAlign: "left", width: 160, headerSort: false
+            },
+            {//create column group
+                title: "Mã hàng", field: "PALLET_ID", hozAlign: "left", width: 80, headerSort: false
+            },
+            {//create column group
+                title: "Chiều dài đoạn (m)", field: "PALLET_ID", hozAlign: "right", width: 80
+            },
+            {//create column group
+                title: "Trọng lượng đoạn (kg/m)", field: "PALLET_ID", hozAlign: "right", width: 80
+            },
+            {//create column group
+                title: "Số đoạn", field: "PALLET_ID", hozAlign: "right", width: 80, topCalc: "sum"
+            },
+            {//create column group
+                title: "Trọng lượng Billet sử dụng (kg)", field: "PALLET_ID", hozAlign: "right", width: 80, topCalc: "sum"
+            },
+            {//create column group
+                title: "Số lượng (kg)", field: "PALLET_ID", hozAlign: "right", width: 80, topCalc: "sum"
+            },
+            {//create column group
+                title: "Số cây", field: "PALLET_ID", hozAlign: "right", width: 80, topCalc: "sum"
+            },
+            {//create column group
+                title: "Phế (kg) tính toán", field: "PALLET_ID", hozAlign: "right", width: 80, topCalc: "sum"
+            },
+            {//create column group
+                title: "Phế (kg) cân thực tế phân bổ", field: "PALLET_ID", hozAlign: "right", width: 80, topCalc: "sum"
+            },
+            {//create column group
+                title: "Tỷ lệ thành phẩm (%)", field: "PALLET_ID", hozAlign: "right", width: 80, topCalc: "avg", topCalcParams: {
+                    precision: 1,
+                }
+            },
+            {//create column group
+                title: "Tỉ lệ phế (%)", field: "PALLET_ID", hozAlign: "right", width: 80
+            },
+            {//create column group
+                title: "Ghi chú", field: "PALLET_ID", hozAlign: "right", width: 80
             },
         ],
     });
 
-    // window.jsPDF = window.jspdf.jsPDF;
-    // var docPDF = new jsPDF('l', 'pt', 'a3');
+    window.jsPDF = window.jspdf.jsPDF;
+    var docPDF = new jsPDF('l', 'pt', 'a3');
     // docPDF.addFont('./SVN-Times New Roman.ttf', 'Times New Roman', 'normal');
     // docPDF.setFont('Times New Roman');
     function print1() {
         // var elementHTML = document.querySelector("#container");
         // docPDF.html(elementHTML, {
         //     callback: function (docPDF) {
-        //         docPDF.save('HTML Linuxhint web page.pdf');
+        //         doc.output('datauri');
         //     },
         //     orientation: "landscape",
         //     x: 15,
@@ -562,9 +593,15 @@
         // });
 
         // table.print(false, true);
-        print();
+
+
+        // print();
+
     }
 
+    setTimeout(function () {
+        print1();
+    }, 1000)
 </script>
 <style>
     body {
@@ -604,7 +641,7 @@
     }
 
     .header-labels>.report-name {
-        font-size: 32px;
+        font-size: 24px;
         display: flex;
         flex-direction: column;
     }
@@ -651,8 +688,12 @@
         margin: 20px auto;
     }
 
+    @page {
+        /* size: A3 landscape; */
+    }
 
     @media print {
+
         body {
             visibility: hidden;
         }
@@ -668,7 +709,6 @@
         }
 
         #container {
-            width: 1200px;
             display: flex !important;
             flex-direction: column;
             justify-content: center;
@@ -685,7 +725,7 @@
         }
 
         .header-labels>.report-name {
-            font-size: 32px;
+            font-size: 18px;
             display: flex;
             flex-direction: column;
 
@@ -708,8 +748,8 @@
             margin: 0 auto !important;
         }
 
-        #example-table>div.tabulator-header {
-            display: table-row-group;
+        @page {
+            /* size: A3 landscape !important; */
         }
 
     }
