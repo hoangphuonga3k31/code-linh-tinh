@@ -1,153 +1,83 @@
-let date = function (currentTime) {
-    return (
-        +currentTime.getDate().toString().padStart(2, "0") +
-        "/" +
-        (currentTime.getMonth() + 1).toString().padStart(2, "0") +
-        "/" +
-        currentTime.getFullYear().toString().substring(2, 4)
-    );
-};
-let currentToDate = date(ToDate);
-let currentFromDate = date(FromDate);
-result = currentToDate;
-let DataPaintReport = me.GetDataPaint({
-    ToDate: ToDate /* DATETIME */,
-    FromDate: FromDate /* DATETIME */,
-    REPORT: "R007",
+
+var i = 0;
+Data.rows.toArray().forEach(row => {
+    if (Flag == "ADD") {
+        me.SetFlagExecute({
+            stateFlag: "ADD" /* STRING [Required] */
+        });
+    }
+    if (Flag == "EDIT") {
+        row.INPUT_DATE = Date;
+        row.BILLET_TREE_STATUS = "S";
+        row.BILLET_TREE_INPUT_LENGTH = Length;
+        row.UPDATED_BY = User;
+        row.UPDATED_DATE = Date;
+
+
+        // data cho bảng billet master
+        let DataUpdateForBilletMaster = Resources["InfoTableFunctions"].CreateInfoTableFromDataShape({
+            infoTableName: "InfoTable",
+            dataShapeName: "AES.DataShape.Dynamic.PRODUCTION_BILLET_INFO",
+        });
+
+        let BilletMasterData = me.LoadingData({
+            strQuery: "select * from PRODUCTION_BILLET_MASTER where MATERIAL_LOT_NUMBER = '" + row.MATERIAL_LOT_NUMBER + "' and STATUS != 'C'"
+        });
+
+        if (BilletMasterData.rows[0].STATUS == 'W') {
+            BilletMasterData.rows[0].STATUS = 'P';
+            BilletMasterData.rows[0].UPDATED_DATE = date;
+            BilletMasterData.rows[0].UPDATED_BY = Resources["CurrentSessionInfo"].GetCurrentUser();
+            DataUpdateForBilletMaster.AddRow(BilletMasterData.rows[0]);
+        } else if (BilletMasterData.rows[0].STATUS == 'P') {
+            let BilletInfoData = me.LoadingData({
+                strQuery: "select count(*) as count from PRODUCTION_BILLET_INFO where WORK_ORDER_ID = " + BilletMasterData.rows[0].PR_KEY + " and MATERIAL_LOT_NUMBER = '" + row.MATERIAL_LOT_NUMBER + "' and BILLET_TREE_STATUS != ' '"
+            });
+            if (BilletInfoData.rows[0].count == (BilletMasterData.rows[0].QUALITY - BilletMasterData.rows[0].QUALITY_RETURN - 1)) {
+                BilletMasterData.rows[0].STATUS = 'C';
+                BilletMasterData.rows[0].UPDATED_DATE = date;
+                BilletMasterData.rows[0].UPDATED_BY = Resources["CurrentSessionInfo"].GetCurrentUser();
+                DataUpdateForBilletMaster.AddRow(BilletMasterData.rows[0]);
+            }
+        }
+
+        if (DataUpdateForBilletMaster.getRowCount() > 0) {
+            Things["CTA.Business.Categories.PRODUCTION_BILLET_MASTER"].SetExecuteData({
+                Flag: "EDIT",
+                Data: DataUpdateForBilletMaster
+            });
+        }
+    }
+    if (Flag == "EDIT_A") {
+        row.BILLET_TREE_STATUS = "A";
+        row.UPDATED_BY = User;
+        row.UPDATED_DATE = Date;
+    }
+    if (Flag == "EDIT_D") {
+        row.BILLET_TREE_STATUS = "D";
+        row.UPDATED_BY = User;
+        row.UPDATED_DATE = Date;
+        row.TOTAL_DEFECTS_OF_BILLET = Length;
+    }
+    if (Flag == "EDIT_W") {
+        row.BILLET_TREE_STATUS = "W";
+        row.UPDATED_BY = User;
+        row.UPDATED_DATE = Date;
+        row.TOTAL_DEFECTS_OF_BILLET = Length;
+    }
+
+    if (Flag == "EDIT_C") {
+        row.BILLET_TREE_STATUS = "C";
+        row.UPDATED_BY = User;
+        row.UPDATED_DATE = Date;
+    }
 });
 
-let resultJSON = {
-    value: [
-        {
-            TO_DATE: currentToDate,
-            FROM_DATE: currentFromDate,
-        },
-    ],
-    Config: [
-        // { title: "Số YC", field: "PURCHASE_ORDER_CODE", width: 300 },
-        {
-            //create column group
-            title: "Stt",
-            field: "PR_KEY",
-            hozAlign: "left",
-            width: 80,
-            headerSort: false,
-        },
-        {
-            //create column group
-            title: "Mác Billet",
-            field: "MATERIAL_NAME",
-            hozAlign: "left",
-            width: 100,
-            headerSort: false,
-        },
-        {
-            //create column group
-            title: "Số Lot",
-            field: "LOT_NUMBER",
-            hozAlign: "left",
-            width: 160,
-            headerSort: false,
-        },
-        {
-            //create column group
-            title: "Mã hàng",
-            field: "PO_DETAILS_PROD_CODE",
-            hozAlign: "left",
-            width: 80,
-            headerSort: false,
-        },
-        {
-            //create column group
-            title: "Chiều dài đoạn (m)",
-            field: "LENGTH_BILLET",
-            hozAlign: "right",
-            width: 80,
-        },
-        {
-            //create column group
-            title: "Trọng lượng đoạn (kg/m)",
-            field: "WEIGHT",
-            hozAlign: "right",
-            width: 80,
-        },
-        {
-            //create column group
-            title: "Số đoạn",
-            field: "PART_NUMBER_OF_BILLET",
-            hozAlign: "right",
-            width: 80,
-            topCalc: "sum",
-        },
-        {
-            //create column group
-            title: "Trọng lượng Billet sử dụng (kg)",
-            field: "WEIGHT_BILLET",
-            hozAlign: "right",
-            width: 80,
-            topCalc: "sum",
-        },
-        {
-            //create column group
-            title: "Số lượng (kg)",
-            field: "TOTAL",
-            hozAlign: "right",
-            width: 80,
-            topCalc: "sum",
-        },
-        {
-            //create column group
-            title: "Số cây",
-            field: "PART_NUMBER_OF_BILLET",
-            hozAlign: "right",
-            width: 80,
-            topCalc: "sum",
-        },
-        {
-            //create column group
-            title: "Phế (kg) tính toán",
-            field: "PHE_TINH_TOAN",
-            hozAlign: "right",
-            width: 80,
-            topCalc: "sum",
-        },
-        {
-            //create column group
-            title: "Phế (kg) cân thực tế phân bổ",
-            field: "PHE",
-            hozAlign: "right",
-            width: 80,
-            topCalc: "sum",
-        },
-        {
-            //create column group
-            title: "Tỷ lệ thành phẩm (%)",
-            field: "TI_LE_TP",
-            hozAlign: "right",
-            width: 80,
-            topCalc: "avg",
-            topCalcParams: {
-                precision: 1,
-            },
-        },
-        {
-            //create column group
-            title: "Tỉ lệ phế (%)",
-            field: "TI_LE_PHE",
-            hozAlign: "right",
-            width: 80,
-        },
-        {
-            //create column group
-            title: "Ghi chú",
-            field: "PR_KEY",
-            hozAlign: "right",
-            width: 80,
-        },
-    ],
-    Data: DataPaintReport.ToJSON().rows,
-};
-me.DataReportCTARPT007 = resultJSON;
-
-result = resultJSON;
-//result = DataPaintReport;
+me.SetFlagExecute({
+    stateFlag: "EDIT" /* STRING [Required] */
+});
+me.DataTable_Execute = Data;
+me.ExecuteData();
+me.ReloadingStructure();
+me.RefreshData();
+result = 'DONE';

@@ -1,93 +1,79 @@
-//CTARPT008
-let date = function (currentTime) {
-	return (
-		+currentTime.getDate().toString().padStart(2, "0") +
-		"/" +
-		(currentTime.getMonth() + 1).toString().padStart(2, "0") +
-		"/" +
-		currentTime.getFullYear().toString().substring(2, 4)
-	);
-};
-let currentToDate = date(ToDate);
-let currentFromDate = date(FromDate);
-
-let DataProgressReportAging = me.ProgressReportAgingGetData({
-	FromDate: FromDate /* DATETIME */,
-	ToDate: ToDate /* DATETIME */
+let Billet_info = me.LoadingData({
+	strQuery: "SELECT * FROM PRODUCTION_BILLET_INFO WHERE BILLET_TREE_STATUS = ' '" /* STRING [Required] */
 });
-
-
-let resultJSON = {
-	value: [
-		{
-			TO_DATE: currentToDate,
-			FROM_DATE: currentFromDate,
-		},
-	],
-	"Data": DataProgressReportAging.ToJSON().rows,
-	"Config": [{
-		title: 'Stt',
-		field: 'Stt',
-		width: 60
-	},
-	{
-		title: 'Ngày',
-		field: 'DATE'
-	},
-	{
-		title: 'Số phiếu',
-		field: 'VOUCHER_NUMBER'
-	}, {
-		title: "ĐƠN HÀNG",
-		columns: [{
-			title: "Số giá",
-			field: "PALLET_ID"
-		},
-		{
-			title: "Mã sản phẩm",
-			field: "PO_DETAILS_PROD_CODE"
-		}, {
-			title: "Số LOT",
-			field: "PRODUCT_LOT_NUMBER"
-		},
-		{
-			title: "Chiều dài(m)",
-			field: "ALUMINUM_BAR_LENGTH"
-		}, {
-			title: "Màu sắc",
-			field: "COLOR_CODE"
-		},
-		{
-			title: "Số lượng(thanh)",
-			field: "QUANTITY_BAR"
-		}, {
-			title: "Số lượng(kg)",
-			field: "QUANTITY_KG"
-		}
-		],
-	}, {
-		title: "PHẾ PHẨM",
-		columns: [{
-			title: "Không đạt(Thanh)",
-			field: "TOTAL_ALUMINUM_BAR_DEFECT"
-		}]
-	}, {
-		title: "THỜI GIAN LÀM VIỆC",
-		columns: [{
-			title: "Bắt đầu(h.m)",
-			field: "START_TIME"
-		}, {
-			title: "Kết thúc(h.m)",
-			field: "END_TIME"
-		}, {
-			title: "Số tiếng",
-			field: "NUMBER_OF_HOUR"
-		}]
-	}, {
-		title: 'Loại lò',
-		field: 'OVEN_TYPE'
+let DataList = Resources["InfoTableFunctions"].CreateInfoTableFromDataShape({
+	infoTableName: "InfoTable",
+	dataShapeName: "AES.DataShape.Dynamic.PRODUCTION_BILLET_INFO"
+});
+let sort = {
+	name: "PR_KEY",
+	ascending: false
+};
+Billet_info.Sort(sort);
+if (Billet_info.getRowCount() > 0) {
+	let WorkOrders
+	if (Billet_info.rows[0].TO_WORK_ORDER_ID == -1) {
+		WorkOrders = me.LoadingData({
+			strQuery: "SELECT * FROM WORK_ORDERS WHERE PR_KEY =" + Billet_info.rows[0].WORK_ORDER_ID  /* STRING [Required] */
+		});
+	} else {
+		WorkOrders = me.LoadingData({
+			strQuery: "SELECT * FROM WORK_ORDERS WHERE PR_KEY =" + Billet_info.rows[0].TO_WORK_ORDER_ID  /* STRING [Required] */
+		});
 	}
-	]
+
+	// let PODetail = me.LoadingData({
+	// 	strQuery: "select * from PURCHASE_ORDER_DETAILS where PR_KEY = " + WorkOrders.rows[0].FR_KEY
+	// })
+
+	// let Quantity = me.LoadingData({
+	//     strQuery: "select QUANTITY_2 from PURCHASE_ORDER_BOM where BOM_TYPE = 'MATL' AND FR_KEY ="+ PODetail.rows[0].PR_KEY /* STRING [Required] */
+	// });
+	let DataTime = me.LoadingData({
+		strQuery: "select DATEDIFF(MINUTE, INPUT_DATE, GETDATE())/60 AS INPUT_TIME, DATEDIFF(MINUTE, INPUT_DATE, GETDATE()) AS INPUT_DATE from PRODUCTION_BILLET_INFO where PR_KEY = " + Billet_info.rows[0].PR_KEY /* STRING [Required] */
+	});
+	let time = DataTime.rows[0].INPUT_TIME + "h " + (DataTime.rows[0].INPUT_DATE - (DataTime.rows[0].INPUT_TIME * 60)) + "m";
+
+	// let ProductionMaster = Things["CTA.Business.Categories.ProductionMaster"].FilterDataTable({
+	// 	Condition: undefined /* STRING */,
+	// 	isServer: false /* BOOLEAN [Required] {"defaultValue":false} */,
+	// 	fieldName: "WORK_ORDER_ID" /* STRING [Required] */,
+	// 	valueField: Billet_info.rows[0].WORK_ORDER_ID /* STRING */
+	// });
+	let ProductionMaster = me.LoadingData({
+		strQuery: "select * from PRODUCTION_MASTER where WORK_ORDER_ID = " + Billet_info.rows[0].WORK_ORDER_ID
+	})
+
+	let length = 0;
+	for (i = 0; i < ProductionMaster.getRowCount(); i++) {
+		if (ProductionMaster.rows[i].NUMBER_BILLET_TREE_CUT == Billet_info.rows[0].NUMBER_BILLET_TREE_INPUT) {
+			length += ProductionMaster.rows[i].PART_OF_BILLET_LENGTH_ACT;
+		}
+	}
+	let Data_Time = me.LoadingData({
+		strQuery: "select INPUT_DATE from PRODUCTION_BILLET_INFO where PR_KEY = " + Billet_info.rows[0].PR_KEY /* STRING [Required] */
+	});
+
+	let MaterialData = me.LoadingData({
+		strQuery: "select MATERIAL_CODE, ALLOYS_ID from MD_MATERIALS where MATERIAL_CODE = '" + Things["CTA.Common.Categories.BilletHeating_ScanMSSQL500ms"].X1_4M1_A1P46 + "'"
+	});
+
+	let AlloyCode = " ";
+	if (MaterialData.getRowCount() > 0) {
+		let AlloyData = me.LoadingData({
+			strQuery: "select ALLOYS_CODE from MD_ALLOYS where ALLOYS_ID = " + MaterialData.rows[0].ALLOYS_ID
+		});
+		if (AlloyData.getRowCount() > 0) {
+			AlloyCode = AlloyData.rows[0].ALLOYS_CODE;
+		}
+	}
+
+
+	Billet_info.rows[0].TO_WORK_ORDER_ID = DataTime.rows[0].INPUT_DATE;
+	Billet_info.rows[0].TOTAL_DEFECTS_OF_BILLET = Billet_info.rows[0].BILLET_TREE_INPUT_LENGTH - length;
+	// Billet_info.rows[0].MATERIAL_LOT_NUMBER = Billet_info.rows[0].MATERIAL_LOT_NUMBER + "," + WorkOrders.rows[0].WORK_ORDER_CODE + "," + (Quantity.getRowCount() > 0 ? Quantity.QUANTITY_2 +" mm," : "-") + MaterialData.rows[0].MATERIAL_CODE
+	Billet_info.rows[0].MATERIAL_LOT_NUMBER = Billet_info.rows[0].MATERIAL_LOT_NUMBER + "," + WorkOrders.rows[0].WORK_ORDER_CODE + "," + "-," + (MaterialData.getRowCount() > 0 ? MaterialData.rows[0].MATERIAL_CODE : "-") + "," + AlloyCode;
+	Billet_info.rows[0].UPDATED_BY = time
+	DataList.AddRow(Billet_info.rows[0])
+	result = DataList;
 }
-me.ConfigAndDataJSONReportAging = resultJSON;
-result = resultJSON;

@@ -1,91 +1,98 @@
-let cur = new Date();
-let startTime = null;
-let endTime = null;
-switch (dateRange) {
-    case '1': // Hôm nay
-        startTime = new Date(cur);
-        startTime.setHours(0, 0, 0);
-        endTime = new Date(cur);
-        endTime.setHours(23, 59, 59);
-        break;
-    case '2': // Hôm qua
-        startTime = new Date(cur);
-        startTime.setDate(cur.getDate() - 1);
-        startTime.setHours(0, 0, 0);
-        endTime = new Date(cur);
-        endTime.setDate(cur.getDate() - 1);
-        endTime.setHours(23, 59, 59);
-        break;
-    case '3': // Tuần này
-        let first = cur.getDate() - cur.getDay();
-        let last = first + 6;
-        startTime = new Date(cur.setDate(first));
-        startTime.setHours(0, 0, 0);
-        endTime = new Date(cur.setDate(last));
-        endTime.setHours(23, 59, 59);
-        break;
-    case '4': // Tuần trước
-        let firstDayOfCurrentWeek = new Date(cur.getTime());
-        firstDayOfCurrentWeek.setDate(cur.getDate() - cur.getDay());
-        startTime = new Date(firstDayOfCurrentWeek.getTime());
-        startTime.setDate(firstDayOfCurrentWeek.getDate() - 7);
-        startTime.setHours(0, 0, 0);
-        endTime = new Date(startTime.getTime());
-        endTime.setDate(endTime.getDate() + 6);
-        endTime.setHours(23, 59, 59);
-        break;
-    case '5': // Tháng này
-        startTime = new Date(cur.getFullYear(), cur.getMonth(), 1);
-        startTime.setHours(0, 0, 0);
-        endTime = new Date(cur.getFullYear(), cur.getMonth() + 1, 0);
-        endTime.setHours(23, 59, 59);
-        break;
-    case '6': // Tháng trước
-        startTime = new Date(cur.getFullYear(), cur.getMonth() - 1, 1);
-        startTime.setHours(0, 0, 0);
-        endTime = new Date(cur.getFullYear(), cur.getMonth(), 0);
-        endTime.setHours(23, 59, 59);
-        break;
-    case '7': // Quý này
-        let curQuarter = Math.floor((cur.getMonth() / 3));
-        startTime = new Date(cur.getFullYear(), curQuarter * 3, 1);
-        startTime.setHours(0, 0, 0);
-        endTime = new Date(cur.getFullYear(), (curQuarter * 3) + 3, 0);
-        endTime.setHours(23, 59, 59);
-        break;
-    case '8': // Quý trước
-        let lastQuarter = Math.floor((cur.getMonth() / 3)) - 1;
-        startTime = new Date(cur.getFullYear(), lastQuarter * 3, 1);
-        startTime.setHours(0, 0, 0);
-        endTime = new Date(cur.getFullYear(), (lastQuarter * 3) + 3, 0);
-        endTime.setHours(23, 59, 59);
-        break;
-    case '9': // Tùy chọn
-        startTime = fromDate ? fromDate : new Date(cur);
-        startTime.setHours(0, 0, 0);
-        endTime = toDate ? toDate : new Date(cur);
-        endTime.setHours(23, 59, 59);
-        break;
-    default:
-        startTime = new Date(cur);
-        startTime.setHours(0, 0, 0);
-        endTime = new Date(cur);
-        endTime.setHours(23, 59, 59);
-        break;
-}
-let data = me.GetDataPaint({
-    FromDate: startTime /* DATETIME */,
-    ToDate: endTime /* DATETIME */,
-    Type: undefined /* STRING */,
-    REPORT: 'R007' /* STRING */
-});
+if (eventData.newValue.value == false) {
+    me.Validate = "ERROR";
+} else {
+    var date = new Date();
+    // result: INFOTABLE dataShape: "AES.DataShape.Dynamic.WHM_MATERIAL_VOUCHER_DETAILS"
+    //    let Data = Things["CTA.Business.Warehouse.WHM_Material_Voucher_Details"].GetNewMaterialCopy();
+    let Data = Things["CTA.Business.Warehouse.WHM_Material_Voucher_Details"].GetNewMaterialCopyCopy();
+    Things["CTA.Business.Production.Production_Billet_Info"].SetExecuteData({
+        Data: Data /* INFOTABLE {"dataShape":"AES.DataShape.Dynamic.WHM_MATERIAL_VOUCHER_DETAILS"} */,
+        Flag: "ADD" /* STRING */,
+        user: Resources["CurrentSessionInfo"].GetCurrentUser() /* STRING */,
+        Date: date /* DATETIME */
+    });
 
-let val = Resources["InfoTableFunctions"].CreateInfoTableFromDataShape({
-    infoTableName: "InfoTable",
-    dataShapeName: "AES.DataShape.Manual.CTARPT_007"
-});
-result = data;
-me.ReturnDataReportCTARPT007({
-    ToDate: endTime /* DATETIME */,
-    FromDate: startTime /* DATETIME */
-});
+    me.SetUpdateBilletLoad();
+
+    let Billet_info = me.LoadingData({
+        strQuery: "SELECT top 1 * FROM PRODUCTION_BILLET_INFO WHERE BILLET_TREE_STATUS = ' ' order by UPDATED_DATE desc" /* STRING [Required] */,
+    });
+
+    let newDataForPMI = Resources["InfoTableFunctions"].CreateInfoTableFromDataShape({
+        infoTableName: "InfoTable",
+        dataShapeName: "AES.DataShape.Dynamic.PRODUCTION_MONITORING_INDEX"
+    });
+
+    let newEntryMIN = {
+        WORK_ORDER_ID: Billet_info.rows[0].WORK_ORDER_ID, // NUMBER
+        WORK_ORDER_DETAIL_ID: -1, // NUMBER
+        WORK_LINE_ID: Billet_info.rows[0].MATERIAL_LOT_NUMBER, // STRING
+        STAGE_TYPE: 'DE_BL', // STRING
+        ITEM_ID: "MIN", // STRING
+        TEMP: me.X1_4M1_A3P12, // NUMBER
+        ELECTRICITY: -1, // NUMBER
+        VALUE_TIME: eventData.newValue.time, // DATETIME
+        ITEM_VALUE: 0, // NUMBER
+        MOLD_ID: -1 // INTEGER
+    };
+    let newEntryMAX = {
+        WORK_ORDER_ID: Billet_info.rows[0].WORK_ORDER_ID, // NUMBER
+        WORK_ORDER_DETAIL_ID: -1, // NUMBER
+        WORK_LINE_ID: Billet_info.rows[0].MATERIAL_LOT_NUMBER, // STRING
+        STAGE_TYPE: 'DE_BL', // STRING
+        ITEM_ID: "MAX", // STRING
+        TEMP: me.X1_4M1_A3P11, // NUMBER
+        ELECTRICITY: -1, // NUMBER
+        VALUE_TIME: eventData.newValue.time, // DATETIME
+        ITEM_VALUE: 0, // NUMBER
+        MOLD_ID: -1 // INTEGER
+    };
+    let newEntrySTART = {
+        WORK_ORDER_ID: Billet_info.rows[0].WORK_ORDER_ID, // NUMBER
+        WORK_ORDER_DETAIL_ID: -1, // NUMBER
+        WORK_LINE_ID: Billet_info.rows[0].MATERIAL_LOT_NUMBER, // STRING
+        STAGE_TYPE: 'DE_BL', // STRING
+        ITEM_ID: "START", // STRING
+        TEMP: me.X1_4M1_A3ST0, // NUMBER
+        ELECTRICITY: -1, // NUMBER
+        VALUE_TIME: eventData.newValue.time, // DATETIME
+        ITEM_VALUE: 0, // NUMBER
+        MOLD_ID: -1 // INTEGER
+    };
+    let newEntryCENTER = {
+        WORK_ORDER_ID: Billet_info.rows[0].WORK_ORDER_ID, // NUMBER
+        WORK_ORDER_DETAIL_ID: -1, // NUMBER
+        WORK_LINE_ID: Billet_info.rows[0].MATERIAL_LOT_NUMBER, // STRING
+        STAGE_TYPE: 'DE_BL', // STRING
+        ITEM_ID: "CENTER", // STRING
+        TEMP: me.X1_4M1_A3ST1, // NUMBER
+        ELECTRICITY: -1, // NUMBER
+        VALUE_TIME: eventData.newValue.time, // DATETIME
+        ITEM_VALUE: 0, // NUMBER
+        MOLD_ID: -1 // INTEGER
+    };
+    let newEntryEND = {
+        WORK_ORDER_ID: Billet_info.rows[0].WORK_ORDER_ID, // NUMBER
+        WORK_ORDER_DETAIL_ID: -1, // NUMBER
+        WORK_LINE_ID: Billet_info.rows[0].MATERIAL_LOT_NUMBER, // STRING
+        STAGE_TYPE: 'DE_BL', // STRING
+        ITEM_ID: "END", // STRING
+        TEMP: me.X1_4M1_A3ST2, // NUMBER
+        ELECTRICITY: -1, // NUMBER
+        VALUE_TIME: eventData.newValue.time, // DATETIME
+        ITEM_VALUE: 0, // NUMBER
+        MOLD_ID: -1 // INTEGER
+    };
+    newDataForPMI.AddRow(newEntryMIN);
+    newDataForPMI.AddRow(newEntryMAX);
+    newDataForPMI.AddRow(newEntrySTART);
+    newDataForPMI.AddRow(newEntryCENTER);
+    newDataForPMI.AddRow(newEntryEND);
+
+    Things["CTA.Business.Production.Production_Monitoring_Index"].SetExecuteData({
+        Data: newDataForPMI /* INFOTABLE {"dataShape":"AES.DataShape.Dynamic.PRODUCTION_MASTER_DETAIL_PNT"} */,
+        Flag: "ADD" /* STRING */
+    });
+
+
+}
